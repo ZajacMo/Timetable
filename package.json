@@ -1,22 +1,65 @@
 {
   "name": "timetables",
-  "version": "1.1.0",
-  "description": "timetable",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "跨平台课程、日程管理系统",
+  "main": "src/electron/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "electron .",
+    "build:core": "tsc -b",
+    "build:electron": "electron-builder",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts",
+    "start": "npm run build:core && npm run dev"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Hzy0913/Timetable.git"
   },
   "keywords": [
-    "timetable"
+    "timetable",
+    "electron",
+    "react-native",
+    "cross-platform"
   ],
   "author": "hzy0913",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Hzy0913/Timetable/issues"
   },
-  "homepage": "https://github.com/Hzy0913/Timetable#readme"
+  "homepage": "https://github.com/Hzy0913/Timetable#readme",
+  "type": "commonjs",
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.8",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "electron": "^29.3.0",
+    "electron-builder": "^24.13.3",
+    "electron-is-dev": "^3.0.1",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5"
+  },
+  "build": {
+    "appId": "com.timetable.app",
+    "productName": "课程表管理系统",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "files": [
+      "dist/**/*",
+      "src/electron/**/*",
+      "package.json"
+    ]
+  }
 }

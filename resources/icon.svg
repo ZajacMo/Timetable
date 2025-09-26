@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- 背景 -->
+  <rect width="512" height="512" fill="#3b82f6" rx="48" ry="48"/>
+  
+  <!-- 课程表图标 -->
+  <g transform="translate(128, 128)">
+    <!-- 表格线 -->
+    <rect width="256" height="256" fill="white" opacity="0.1"/>
+    
+    <!-- 表头 -->
+    <rect x="0" y="0" width="256" height="32" fill="white" opacity="0.2"/>
+    
+    <!-- 课程条 -->
+    <rect x="32" y="48" width="200" height="48" fill="white" rx="8" ry="8"/>
+    <rect x="32" y="112" width="120" height="48" fill="white" rx="8" ry="8"/>
+    <rect x="160" y="112" width="72" height="48" fill="white" rx="8" ry="8"/>
+    <rect x="32" y="176" width="200" height="48" fill="white" rx="8" ry="8"/>
+    
+    <!-- 课程文本占位 -->
+    <rect x="48" y="64" width="170" height="20" fill="white" opacity="0.7" rx="4" ry="4"/>
+    <rect x="48" y="128" width="90" height="20" fill="white" opacity="0.7" rx="4" ry="4"/>
+    <rect x="176" y="128" width="40" height="20" fill="white" opacity="0.7" rx="4" ry="4"/>
+    <rect x="48" y="192" width="170" height="20" fill="white" opacity="0.7" rx="4" ry="4"/>
+  </g>
+</svg>

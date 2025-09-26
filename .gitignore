@@ -48,6 +48,29 @@ build
 .gradle
 /local.properties
 /.idea/caches
+
+# Cordova
+platforms/
+plugins/
+www/
+resource-file.js
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# TypeScript
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
 /.idea/libraries
 /.idea/modules.xml
 /.idea/workspace.xml

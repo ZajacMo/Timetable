@@ -1,101 +1,94 @@
 
-# 课程表助手 (Timetable App)
+# 课程表应用
 
-一款跨平台的课程表管理应用，支持Windows桌面端和Android移动端。帮助学生和教师高效管理课程安排、查看课程表、设置日程提醒等功能。
+一款基于Vue3和Cordova开发的课程表应用，支持课程管理、日程安排和设置提醒等功能，可在网页和移动设备上运行。
 
-## 🚀 特性
+## 功能特性
 
-- **跨平台支持**：同时支持Windows桌面端和Android移动端
-- **课程管理**：添加、编辑、删除和搜索课程
-- **课程表视图**：直观的课程表展示，支持周切换
-- **日程安排**：添加个人日程提醒
-- **学期管理**：设置多个学期，支持切换当前学期
-- **数据导入导出**：支持JSON格式数据备份和恢复
-- **主题切换**：支持亮色、暗色和跟随系统主题
-- **统计信息**：显示本周课程数量、学期进度等统计数据
+- 📅 **课程管理** - 添加、编辑、删除课程信息
+- 📝 **日程安排** - 管理个人日程和活动
+- ⚙️ **个性化设置** - 主题切换、学期设置、显示选项等
+- 🔔 **通知提醒** - 课程和日程的提前提醒功能
+- 📱 **响应式设计** - 适配不同屏幕尺寸
+- 🌙 **深色模式** - 护眼模式支持
 
-## 🛠️ 技术栈
+## 技术栈
 
-### 核心技术
-- **TypeScript**：提供类型安全的开发体验
-- **React Native**：用于Android移动端开发
-- **Electron**：用于Windows桌面端开发
-- **React Navigation**：实现移动应用导航
-- **React Native Paper**：提供移动应用UI组件
-- **Expo**：简化React Native开发流程
+- **前端框架**: Vue 3
+- **状态管理**: Pinia
+- **路由**: Vue Router
+- **构建工具**: Vite
+- **打包工具**: Cordova
+- **开发语言**: TypeScript
 
-### 项目结构
+## 项目结构
+
 ```
-Timetable/
-├── src/
-│   ├── core/          # 核心业务逻辑（共享模块）
-│   │   ├── index.ts   # 核心模块导出
-│   │   ├── types.ts   # 类型定义
-│   │   └── ...        # 其他核心组件
-│   ├── electron/      # Electron桌面端代码
-│   │   ├── main.js    # 主进程代码
-│   │   ├── renderer.js # 渲染进程代码
-│   │   └── ...        # 其他Electron相关文件
-│   └── react-native/  # React Native移动端代码
-│       ├── screens/   # 页面组件
-│       ├── App.js     # 应用入口组件
-│       └── ...        # 其他React Native相关文件
-├── .gitignore         # Git忽略文件配置
-├── package.json       # 项目依赖和脚本
-├── tsconfig.json      # TypeScript配置
-└── README.md          # 项目说明文档
+src/
+├── components/        # 组件
+│   ├── CourseDialog.vue      # 课程添加/编辑对话框
+│   ├── ScheduleDialog.vue    # 日程添加/编辑对话框
+│   └── TimetableView.vue     # 课程表视图组件
+├── core/              # 核心功能
+├── router/            # 路由配置
+├── stores/            # 状态管理
+│   ├── courses.ts     # 课程数据
+│   ├── schedules.ts   # 日程数据
+│   └── settings.ts    # 应用设置
+├── types/             # 类型定义
+├── views/             # 页面视图
+│   ├── HomeView.vue       # 首页/课程表
+│   ├── ScheduleView.vue   # 日程页面
+│   └── SettingsView.vue   # 设置页面
+├── App.vue            # 主组件
+├── main.ts            # 应用入口
+└── style.css          # 全局样式
 ```
 
-## 📱 安装和运行
+## 安装与开发
 
 ### 前提条件
-- 安装Node.js (v14.0.0或更高版本)
-- 安装npm、yarn或pnpm包管理器
 
-### 桌面端（Windows）
+- Node.js (推荐 v16.0 或更高版本)
+- npm (推荐 v7.0 或更高版本)
+- Cordova CLI (可选，用于移动应用构建)
 
-1. 克隆项目仓库
-```bash
-git clone https://your-repository-url.git
-cd Timetable
-```
+### 安装依赖
 
-2. 安装依赖
 ```bash
 npm install
 ```
 
-3. 运行开发模式
+### 开发模式
+
 ```bash
 npm run dev
 ```
 
-4. 构建生产版本
+此命令将启动本地开发服务器，通常运行在 http://localhost:5173/ 上。
+
+### 构建Web应用
+
 ```bash
 npm run build
 ```
 
-### 移动端（Android）
+构建后的文件将输出到 `dist` 目录。
 
-1. 确保已安装React Native开发环境（详见[React Native官方文档](https://reactnative.dev/docs/environment-setup)）
+### Cordova相关命令
 
-2. 进入React Native项目目录
+添加平台:
+
 ```bash
-cd src/react-native
+npm run cordova:add-android  # 添加Android平台
+npm run cordova:add-ios      # 添加iOS平台
 ```
 
-3. 安装依赖
-```bash
-npm install
-```
+构建并运行在设备上:
 
-4. 运行开发模式
 ```bash
-# 使用Expo Go应用
-npx expo start
-
-# 或直接在模拟器/设备上运行
-npx react-native run-android
+npm run cordova:run-android  # 构建并运行到Android设备
+npm run cordova:run-ios      # 构建并运行到iOS设备
 ```
 
 ## 🔧 开发指南

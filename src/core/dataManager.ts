@@ -50,16 +50,16 @@ export class DataManager {
   }
 
   // 保存所有数据到存储
-  private async saveAllData(): Promise<void> {
-    await this.storageProvider.save('courses', this.courses);
-    await this.storageProvider.save('schedules', this.schedules);
-    if (this.semester) {
-      await this.storageProvider.save('semester', this.semester);
-    }
-    if (this.settings) {
-      await this.storageProvider.save('settings', this.settings);
-    }
-  }
+  // private async saveAllData(): Promise<void> {
+  //   await this.storageProvider.save('courses', this.courses);
+  //   await this.storageProvider.save('schedules', this.schedules);
+  //   if (this.semester) {
+  //     await this.storageProvider.save('semester', this.semester);
+  //   }
+  //   if (this.settings) {
+  //     await this.storageProvider.save('settings', this.settings);
+  //   }
+  // }
 
   // 课程管理方法
 

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
+    <!-- Cordova.js 将在原生应用环境中自动提供 -->
+    <script type="text/javascript">
+      // 检查是否在原生应用环境中运行
+      if (window.cordova || document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1) {
+        // 在原生应用环境中，动态加载cordova.js
+        document.write('<script type="text/javascript" src="cordova.js"><\/script>');
+      } else {
+        // 在浏览器环境中，创建一个模拟的cordova对象
+        window.cordova = {
+          plugins: {}
+        };
+        console.log('浏览器开发环境：已创建模拟cordova对象');
+      }
+    </script>
+    <title>课程表管理系统</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

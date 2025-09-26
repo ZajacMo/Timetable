@@ -1,5 +1,5 @@
-import { Course, Semester } from './types';
-import { generateColor, getDayOfWeekChinese, groupBy } from './utils';
+import { Course } from './types';
+import { generateColor, groupBy } from './utils';
 
 /**
  * 课程表渲染器类

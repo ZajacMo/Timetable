@@ -4,6 +4,16 @@ import { ref, computed } from 'vue'
 // 存储键名
 const STORAGE_KEY = 'timetable-settings'
 
+export interface HolidayCourseAdjustment {
+  id: string
+  originalWeek: number
+  originalDay: number
+  targetWeek: number
+  targetDay: number
+  reason: string
+  createdAt: string
+}
+
 export interface AppSettings {
   // 主题设置
   theme: 'light' | 'dark' | 'system'
@@ -26,7 +36,15 @@ export interface AppSettings {
     timetableMode: 'daily' | 'weekly'
     classDuration: number // 每节课分钟数
     timeFormat: '12h' | '24h'
-  }
+    maxDailyCourses: number // 每日最大课程数量
+    // 课程时间配置
+    sectionTimes: {
+      [key: number]: {
+        startTime: string
+        endTime: string
+      }
+    }
+  },
   
   // 学期设置
   semester: {
@@ -34,6 +52,9 @@ export interface AppSettings {
     weeksCount: number
     name: string
   }
+  
+  // 节假日课程调整设置
+  holidayCourseAdjustments: HolidayCourseAdjustment[]
   
   // 其他设置
   other: {
@@ -59,13 +80,30 @@ export const useSettingsStore = defineStore('settings', () => {
       showTeacher: true,
       timetableMode: 'weekly',
       classDuration: 45,
-      timeFormat: '24h'
+      timeFormat: '24h',
+      maxDailyCourses: 6, // 默认每日最大课程数为6
+      // 默认课程时间配置
+      sectionTimes: {
+        1: { startTime: '08:00', endTime: '08:45' },
+        2: { startTime: '08:55', endTime: '09:40' },
+        3: { startTime: '10:00', endTime: '10:45' },
+        4: { startTime: '10:55', endTime: '11:40' },
+        5: { startTime: '13:30', endTime: '14:15' },
+        6: { startTime: '14:25', endTime: '15:10' },
+        7: { startTime: '15:30', endTime: '16:15' },
+        8: { startTime: '16:25', endTime: '17:10' },
+        9: { startTime: '18:00', endTime: '18:45' },
+        10: { startTime: '18:55', endTime: '19:40' },
+        11: { startTime: '19:50', endTime: '20:35' }
+      }
     },
     semester: {
       startDate: new Date(new Date().getFullYear(), 7, 1).toISOString(), // 假设9月1日开学
       weeksCount: 20,
       name: new Date().getFullYear() + '-' + (parseInt(String(new Date().getFullYear()).slice(2)) + 1) + '学年第1学期'
     },
+    // 初始化节假日课程调整为空数组
+    holidayCourseAdjustments: [],
     other: {
       animationEnabled: true,
       soundEnabled: false,
@@ -89,26 +127,27 @@ export const useSettingsStore = defineStore('settings', () => {
       if (storedSettings) {
         const parsedSettings = JSON.parse(storedSettings)
         // 合并默认设置和存储的设置，确保所有字段都存在
-        settings.value = {
-          ...defaultSettings,
-          ...parsedSettings,
-          notifications: {
-            ...defaultSettings.notifications,
-            ...parsedSettings.notifications
-          },
-          display: {
-            ...defaultSettings.display,
-            ...parsedSettings.display
-          },
-          semester: {
-            ...defaultSettings.semester,
-            ...parsedSettings.semester
-          },
-          other: {
-            ...defaultSettings.other,
-            ...parsedSettings.other
-          }
+      settings.value = {
+        ...defaultSettings,
+        ...parsedSettings,
+        notifications: {
+          ...defaultSettings.notifications,
+          ...parsedSettings.notifications
+        },
+        display: {
+          ...defaultSettings.display,
+          ...parsedSettings.display
+        },
+        semester: {
+          ...defaultSettings.semester,
+          ...parsedSettings.semester
+        },
+        holidayCourseAdjustments: parsedSettings.holidayCourseAdjustments || defaultSettings.holidayCourseAdjustments,
+        other: {
+          ...defaultSettings.other,
+          ...parsedSettings.other
         }
+      }
       }
     } catch (error) {
       console.error('加载设置失败:', error)
@@ -143,6 +182,7 @@ export const useSettingsStore = defineStore('settings', () => {
       semester: updatedSettings.semester
         ? { ...settings.value.semester, ...updatedSettings.semester }
         : settings.value.semester,
+      holidayCourseAdjustments: updatedSettings.holidayCourseAdjustments || settings.value.holidayCourseAdjustments,
       other: updatedSettings.other
         ? { ...settings.value.other, ...updatedSettings.other }
         : settings.value.other
@@ -258,6 +298,42 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
   
+  // 添加节假日课程调整记录
+  const addHolidayCourseAdjustment = async (adjustment: Omit<HolidayCourseAdjustment, 'id' | 'createdAt'>): Promise<HolidayCourseAdjustment> => {
+    const newAdjustment: HolidayCourseAdjustment = {
+      ...adjustment,
+      id: Date.now().toString() + Math.floor(Math.random() * 1000),
+      createdAt: new Date().toISOString()
+    }
+    
+    settings.value.holidayCourseAdjustments.push(newAdjustment)
+    saveSettings()
+    
+    return newAdjustment
+  }
+  
+  // 删除节假日课程调整记录
+  const deleteHolidayCourseAdjustment = async (id: string): Promise<boolean> => {
+    const index = settings.value.holidayCourseAdjustments.findIndex(adj => adj.id === id)
+    if (index !== -1) {
+      settings.value.holidayCourseAdjustments.splice(index, 1)
+      saveSettings()
+      return true
+    }
+    return false
+  }
+  
+  // 获取特定的节假日课程调整记录
+  const getHolidayCourseAdjustment = (id: string): HolidayCourseAdjustment | undefined => {
+    return settings.value.holidayCourseAdjustments.find(adj => adj.id === id)
+  }
+  
+  // 清空所有节假日课程调整记录
+  const clearHolidayCourseAdjustments = async (): Promise<void> => {
+    settings.value.holidayCourseAdjustments = []
+    saveSettings()
+  }
+  
   // 监听系统主题变化
   if (typeof window !== 'undefined') {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -278,6 +354,10 @@ export const useSettingsStore = defineStore('settings', () => {
     currentWeek,
     formatTime,
     exportSettings,
-    importSettings
+    importSettings,
+    addHolidayCourseAdjustment,
+    deleteHolidayCourseAdjustment,
+    getHolidayCourseAdjustment,
+    clearHolidayCourseAdjustments
   }
 })

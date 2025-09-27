@@ -139,3 +139,6 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+courses.json
+processedCourses.json

@@ -2,7 +2,7 @@
   <div class="app">
     <!-- 顶部导航栏 -->
     <header class="app-header">
-      <h1>课程表管理系统</h1>
+      <h1>日程管理系统</h1>
       <div class="header-actions">
         <button @click="switchTheme" class="theme-button">
           {{ isDarkMode ? '🌞' : '🌙' }}
@@ -19,7 +19,7 @@
     <nav class="app-nav">
       <router-link to="/" class="nav-item">
         <span class="nav-icon">📅</span>
-        <span class="nav-text">课程表</span>
+        <span class="nav-text">课程</span>
       </router-link>
       <router-link to="/schedule" class="nav-item">
         <span class="nav-icon">📝</span>
@@ -111,6 +111,8 @@ body {
 
 /* 主要内容 */
 .app-main {
+  display: flex;
+  flex-direction: column;
   flex: 1;
 }
 
@@ -125,6 +127,7 @@ body {
   display: flex;
   justify-content: space-around;
   padding: 10px 0;
+  z-index: 1000;
 }
 
 .nav-item {

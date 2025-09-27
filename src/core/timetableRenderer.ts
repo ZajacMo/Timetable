@@ -1,5 +1,37 @@
-import { Course } from './types';
-import { generateColor, groupBy } from './utils';
+import type { Course } from './types';
+import { groupBy, generateColor } from './utils';
+
+// 重叠信息接口
+export interface OverlapInfo {
+  courseId1: string;
+  courseId2: string;
+  startSection: number;
+  endSection: number;
+}
+
+// 位置化的课程接口
+export interface PositionedCourse extends Course {
+  color: string;
+  rowSpan: number;
+  columnSpan: number;
+  columnPosition: number;
+  hasOverlap: boolean;
+}
+
+// 天数据接口
+export interface DayData {
+  name: string;
+  dayOfWeek: number;
+  courses: PositionedCourse[];
+}
+
+// 课程表数据接口
+export interface TimetableData {
+  currentWeek: number;
+  days: DayData[];
+  sections: string[];
+  hasOverlaps: boolean;
+}
 
 /**
  * 课程表渲染器类
@@ -36,7 +68,7 @@ export class TimetableRenderer {
    * @param currentWeek 当前周数
    * @returns 格式化后的课程表数据
    */
-  generateTimetableData(courses: Course[], currentWeek: number): TimetableData {
+  render(courses: Course[], currentWeek: number): TimetableData {
     // 按星期几对课程进行分组
     const coursesByDay = groupBy(courses, 'dayOfWeek');
     
@@ -489,56 +521,17 @@ export class TimetableRenderer {
   }
 }
 
-// 类型定义
-
-export interface TimetableData {
-  currentWeek: number;
-  days: DayData[];
-  sections: string[];
-  hasOverlaps: boolean;
-}
-
-export interface DayData {
-  name: string;
-  dayOfWeek: number;
-  courses: PositionedCourse[];
-}
-
-export interface PositionedCourse extends Course {
-  color: string;
-  rowSpan: number;
-  columnSpan: number;
-  columnPosition: number;
-  hasOverlap: boolean;
-}
-
-export interface OverlapInfo {
-  courseId1: string;
-  courseId2: string;
-  startSection: number;
-  endSection: number;
-}
-
+// React Native 渲染数据接口
 export interface RNRenderData {
   currentWeek: number;
-  days: RNDaysData[];
+  days: {
+    name: string;
+    dayOfWeek: number;
+    courses: Array<PositionedCourse & { style: { backgroundColor: string; rowSpan: number; columnSpan: number; columnPosition: number } }>;
+  }[];
   sections: string[];
   hasOverlaps: boolean;
 }
 
-export interface RNDaysData {
-  name: string;
-  dayOfWeek: number;
-  courses: RNCourseData[];
-}
-
-export interface RNCourseData extends PositionedCourse {
-  style: {
-    backgroundColor: string;
-    rowSpan: number;
-    columnSpan: number;
-    columnPosition: number;
-  };
-}
-
+// Electron 渲染数据接口
 export type ElectronRenderData = TimetableData;

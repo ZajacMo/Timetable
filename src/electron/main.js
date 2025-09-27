@@ -23,7 +23,7 @@ function createWindow() {
       enableRemoteModule: true,
       preload: path.join(__dirname, 'preload.js'),
     },
-    title: '课程表管理系统',
+    title: '日程管理系统',
     show: false,
   });
 
@@ -87,8 +87,8 @@ function createWindow() {
           label: '关于',
           click: () => {
             dialog.showMessageBox(mainWindow, {
-              title: '关于课程表管理系统',
-              message: '课程表管理系统 v2.0.0\n\n跨平台课程、日程管理系统\n支持Windows和Android平台',
+              title: '关于日程管理系统',
+              message: '日程管理系统 v2.0.0\n\n跨平台课程、日程管理系统\n支持Windows和Android平台',
               buttons: ['确定'],
               icon: path.join(__dirname, '../../build/icon.ico'),
             });

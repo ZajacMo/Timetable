@@ -21,6 +21,10 @@ interface CourseInfo {
   teacher?: string;
   classroom?: string;
   color?: string;
+  // 连堂数（课程持续的课时数）
+  duration?: number;
+  lessonCount?: number;
+  continuousSessions?: number;
   // 可能包含其他课程相关信息
   [key: string]: any;
 }
@@ -29,36 +33,56 @@ interface CourseInfo {
 const props = defineProps<{
   course: CourseInfo;
   style?: { [key: string]: string };
+  // 单课时高度（用于计算连堂课程的总高度）
+  singleLessonHeight?: number;
 }>()
 
 const router = useRouter()
 
 // 计算课程单元格的样式，确保文本在不同背景下清晰可读
-  const courseCellStyle = computed(() => {
-    const baseStyle: Record<string, string> = {
-      padding: '6px 8px',
-      borderRadius: '4px',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-    };
+const courseCellStyle = computed(() => {
+  const baseStyle: Record<string, string> = {
+    padding: '6px 8px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+  };
 
-    // 如果有传入样式，则合并
-    if (props.style) {
-      Object.assign(baseStyle, props.style);
-    }
-
-    // 获取背景颜色
-    const bgColor = baseStyle.backgroundColor || props.course.color || '#f5f7fa';
+  // 尝试获取连堂数（从不同可能的属性名中获取）
+  // 如果有endSection和startSection属性，可以计算连堂数
+  const sectionBasedDuration = props.course.endSection && props.course.startSection 
+    ? props.course.endSection - props.course.startSection + 1 
+    : 1;
     
-    // 计算文本颜色（基于背景色的亮度决定黑色或白色文字）
-    if (bgColor && bgColor !== 'transparent') {
-      const luminance = getLuminance(bgColor);
-      baseStyle.color = luminance > 0.5 ? '#333' : '#fff';
-    }
+  const continuousCount = props.course.duration || 
+                          props.course.lessonCount || 
+                          props.course.continuousSessions || 
+                          sectionBasedDuration;
+  
+  // 如果提供了单课时高度，根据连堂数计算总高度
+  if (props.singleLessonHeight && continuousCount > 1) {
+    baseStyle.height = `${props.singleLessonHeight * continuousCount}px`;
+    // 确保内容在垂直方向上适当分布
+    baseStyle.justifyContent = 'center';
+  }
 
-    return baseStyle;
-  })
+  // 如果有传入样式，则合并
+  if (props.style) {
+    Object.assign(baseStyle, props.style);
+  }
+
+  // 获取背景颜色
+  const bgColor = baseStyle.backgroundColor || props.course.color || '#f5f7fa';
+  
+  // 计算文本颜色（基于背景色的亮度决定黑色或白色文字）
+  if (bgColor && bgColor !== 'transparent') {
+    const luminance = getLuminance(bgColor);
+    baseStyle.color = luminance > 0.5 ? '#333' : '#fff';
+  }
+
+  return baseStyle;
+})
 
 // 计算颜色的亮度（0-1，0为最暗，1为最亮）
 const getLuminance = (color: string): number => {
@@ -99,9 +123,9 @@ const handleClick = () => {
 </script>
 
 <style scoped>
-.course-cell {
+div.course-cell {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -113,7 +137,7 @@ const handleClick = () => {
   padding: 2px;
 }
 
-.course-cell:hover {
+div.course-cell:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }

@@ -67,6 +67,7 @@
             :key="course.id || index"
             :course="course"
             :style="{ backgroundColor: course.color || '#f5f7fa' }"
+            :single-lesson-height="50"
           />
           <div v-if="row[column.property].length > 1" style="height: 8px;"></div>
         </div>
@@ -482,12 +483,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-:deep(.el-table .cell){
-/* table.el-table__body>tbody>tr>td>div.cell{ */
-  padding: 2px;
-  height: 100%;
-}
-
+/* ===== 基础容器样式 ===== */
 .timetable {
   width: 100%;
   border-collapse: collapse;
@@ -498,7 +494,24 @@ onMounted(() => {
   flex: 1;
 }
 
-/* 周次切换控件样式 */
+/* ===== Element UI 表格样式覆盖 ===== */
+:deep(.el-table .cell) {
+  padding: 2px;
+  height: 100%;
+}
+
+
+:deep(.el-table) {
+  font-size: 8px;
+}
+
+:deep(.el-table th),
+:deep(.el-table td) {
+  font-size: 12px;
+  padding: 0px;
+}
+
+/* ===== 周次切换控件样式 ===== */
 .week-switcher {
   display: flex;
   align-items: center;
@@ -526,7 +539,7 @@ onMounted(() => {
   background-color: rgba(64, 158, 255, 0.1);
 }
 
-/* 周数选择器样式 */
+/* ===== 周数选择器样式 ===== */
 .week-selector {
   position: absolute;
   top: 100%;
@@ -606,27 +619,23 @@ onMounted(() => {
   border-top: 1px solid #e4e7ed;
 }
 
-/* 设置el-table字体大小 */
-.timetable :deep(.el-table) {
+/* ===== 时间列样式 ===== */
+.time-column {
+  background-color: #f2f6f7;
   font-size: 8px;
+  width: 20px;
 }
 
-/* 设置el-table单元格字体大小 */
-.timetable :deep(.el-table th),
-.timetable :deep(.el-table td) {
-  font-size: 12px;
-  padding: 0px;
-}
-
-/* 时间单元格样式 */
-div.time-cell-content {
+.time-cell-content {
   align-items: center;
   justify-content: center;
-  div.section-number {
+  
+  .section-number {
     font-size: 12px;
     font-weight: 500;
   }
-  div.section-time {
+  
+  .section-time {
     align-items: center;
     line-height: 12px;
     text-align: center;
@@ -634,62 +643,22 @@ div.time-cell-content {
     color: #666;
     align-items: center;
     justify-content: center;
-    div.start-time,
-    div.end-time {
+    
+    .start-time,
+    .end-time {
       font-size: 10px;
       color: #666;
     }
   }
 }
 
-.time-column {
-  background-color: #f2f6f7;
-  /* border-right: 1px solid #ddd; */
-  font-size: 8px;
-  width: 20px;
-}
-
-
+/* ===== 日期列样式 ===== */
 .day-column {
   display: flex;
   flex-direction: column;
 }
 
-.cell-content {
-  position: relative;
-  min-height: 60px;
-  border-right: 1px solid #ddd;
-  border-bottom: 1px dashed #ddd;
-  /* width: 120px; 设置固定宽度 */
-  display: flex;
-  flex-direction: column;
-}
-
-/* CourseCell父容器样式 */
-.cell-content > div {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 深色模式 */
-.dark-mode .timetable-header,
-.dark-mode .time-column {
-  background-color: #3d3d3d;
-  color: #fff;
-}
-
-.dark-mode .day-column.weekend {
-  background-color: #2d2d2d;
-}
-
-.dark-mode .course-name,
-.dark-mode .course-teacher,
-.dark-mode .course-classroom {
-  color: #fff;
-}
-
-/* 日期标签样式 */
+/* ===== 日期标签样式 ===== */
 .day-label-container {
   display: flex;
   flex-direction: column;
@@ -717,14 +686,33 @@ div.time-cell-content {
   border-radius: 3px;
 }
 
-/* 教师信息居中显示 */
+/* ===== 课程信息样式 ===== */
 .course-teacher {
   text-align: center;
   font-size: 10px;
   width: 100%;
 }
 
-/* 响应式设计 */
+/* ===== 深色模式样式 ===== */
+.dark-mode {
+  .timetable-header,
+  .time-column {
+    background-color: #3d3d3d;
+    color: #fff;
+  }
+  
+  .day-column.weekend {
+    background-color: #2d2d2d;
+  }
+  
+  .course-name,
+  .course-teacher,
+  .course-classroom {
+    color: #fff;
+  }
+}
+
+/* ===== 响应式设计 ===== */
 @media (max-width: 768px) {
   .timetable {
     font-size: 12px;

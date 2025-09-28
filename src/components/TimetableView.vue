@@ -1,7 +1,8 @@
 <template>
   <div class="timetable">
-    <!-- 周次切换控件 -->
+    <!-- 周次切换控件和新增作业按钮 -->
   <div class="week-switcher">
+    <el-button @click="handleAddAssignment" type="primary" size="small">新增作业</el-button>
     <el-button @click="changeWeek(-1)" size="small">上一周</el-button>
     <div class="current-week-container">
       <span class="current-week" @click="showWeekSelector = !showWeekSelector">
@@ -77,17 +78,40 @@
     </el-table>
 
   </div>
+
+  <!-- 新增作业对话框 -->
+  <AssignmentDialog
+    v-model="showAddAssignmentDialog"
+    mode="add"
+    @submit="handleSubmitAssignment"
+  />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import CourseCell from './CourseCell.vue'
+import AssignmentDialog from './AssignmentDialog.vue'
 import processedCourses from '../../processedCourses.json'
 import { useSettingsStore } from '@/stores/settings'
 import { CourseDataProcessor } from '@/core/courseDataProcessor'
 
 // 初始化设置store
 const settingsStore = useSettingsStore()
+
+// 新增作业相关状态
+const showAddAssignmentDialog = ref(false)
+
+// 处理新增作业
+const handleAddAssignment = () => {
+  showAddAssignmentDialog.value = true
+}
+
+// 处理提交作业
+const handleSubmitAssignment = (assignmentData: any) => {
+  // 这里可以添加作业提交后的处理逻辑
+  showAddAssignmentDialog.value = false
+  // 可以通过emit将作业数据传递给父组件
+}
 
 // 当前显示的周次（响应式）
 const currentWeekDisplay = ref(1)

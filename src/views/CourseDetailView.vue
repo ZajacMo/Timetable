@@ -2,13 +2,15 @@
   <div class="course-detail">
     <div class="course-detail-header">
       <h2>课程详情</h2>
-      <el-button type="primary" @click="$router.back()">返回</el-button>
+      <div style="display: flex; gap: 10px;">
+        <el-button type="primary" @click="$router.back()">返回</el-button>
+      </div>
     </div>
     
     <el-card v-if="course" class="course-info-card">
       <div class="course-name-section">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3>{{ course.name }}</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h3>{{ course.name }}</h3>
           <el-button type="primary" size="small" @click="openAddAssignmentDialog">
             添加作业
           </el-button>
@@ -69,16 +71,44 @@
       :course-id="course.id.toString()"
       :course-name="course.name"
       @close="showAssignmentDialog = false"
-      @submit="showAssignmentDialog = false"
+      @submit="handleAssignmentSubmitNew"
     />
+    
+    <!-- 作业列表 -->
+    <el-card v-if="course && courseAssignments.length > 0" class="assignments-card">
+      <template #header>
+        <div class="card-header">
+          <span>作业列表</span>
+        </div>
+      </template>
+      <div class="assignments-list">
+        <div v-for="assignment in courseAssignments" :key="assignment.id" class="assignment-item">
+          <div class="assignment-content">{{ assignment.content }}</div>
+          <div class="assignment-meta">
+            <span class="assignment-deadline">
+              截止日期：{{ formatAssignmentDeadline(assignment.deadline) }}
+            </span>
+            <el-tag :type="getStatusType(assignment.status)">
+              {{ getStatusText(assignment.status) }}
+            </el-tag>
+          </div>
+        </div>
+      </div>
+    </el-card>
+    
+    <el-empty v-else-if="course" description="暂无作业信息" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import processedCourses from '../../processedCourses.json'
 import AssignmentDialog from '../components/AssignmentDialog.vue'
+import { useScheduleStore } from '../stores/schedule'
+import { useAssignmentStore } from '../stores/assignment'
+import { CourseDataProcessor } from '../core/courseDataProcessor'
+import { ElMessage } from 'element-plus'
 
 // 定义课程接口
 interface Course {
@@ -111,13 +141,116 @@ const course = ref<Course | null>(null)
 const allSchedules = ref<CourseSchedule[]>([])
 
 // 作业对话框相关状态
-const showAssignmentDialog = ref(false)
-const assignmentDialogMode = ref<'add' | 'edit'>('add')
-const selectedAssignment = ref<any>(null)
+  const showAssignmentDialog = ref(false)
+  const assignmentDialogMode = ref<'add' | 'edit'>('add')
+  const selectedAssignment = ref<any>(null)
 const assignmentDialogRef = ref<InstanceType<typeof AssignmentDialog>>()
+
+// 课程相关状态和方法
+const scheduleStore = useScheduleStore()
+const assignmentStore = useAssignmentStore()
 
 // 课程ID从路由参数中获取
 const courseId = route.query.id
+
+// 初始化课程作业列表
+const courseAssignments = ref<any[]>([])
+
+  // 处理作业提交 - 暂时保留但不使用
+  const handleAssignmentSubmit = async (assignmentData: any) => {
+    try {
+      // 添加作业到assignment store
+      if (assignmentDialogMode.value === 'add') {
+        await assignmentStore.addAssignment(assignmentData)
+        
+        // 将作业截止日期添加到日程表
+        await scheduleStore.addSchedule({
+          title: `作业截止: ${assignmentData.content}`,
+          startDate: new Date(assignmentData.deadline),
+          endDate: new Date(assignmentData.deadline),
+          description: `课程: ${course.value?.name}`,
+          isAllDay: false,
+          color: '#f05261'
+        })
+      } else {
+        await assignmentStore.updateAssignment(assignmentData.id, assignmentData)
+      }
+      
+      showAssignmentDialog.value = false
+        // 刷新作业列表
+        loadCourseAssignments()
+    } catch (error) {
+      console.error('保存作业失败:', error)
+    }
+  }
+  
+  // 重命名为避免函数名重复
+  const handleAssignmentSubmitNew = async (assignmentData: any) => {
+    try {
+      // 添加作业到assignment store
+      await assignmentStore.addAssignment({
+        ...assignmentData,
+        courseId: course.value?.id.toString(),
+        courseName: course.value?.name,
+        status: 'pending'
+      })
+      
+      // 将作业截止日期添加到日程表
+      await scheduleStore.addSchedule({
+        title: `作业截止: ${assignmentData.content}`,
+        startDate: new Date(assignmentData.deadline),
+        endDate: new Date(assignmentData.deadline),
+        description: `课程: ${course.value?.name}`,
+        isAllDay: false,
+        color: '#f05261'
+      })
+      
+      // 显示成功提示
+      ElMessage.success('作业创建成功！')
+      // 关闭对话框
+      showAssignmentDialog.value = false
+      // 刷新作业列表
+      loadCourseAssignments()
+    } catch (error) {
+      console.error('保存作业失败:', error)
+      ElMessage.error('作业创建失败，请重试')
+    }
+  }
+  
+  // 格式化作业截止日期
+  const formatAssignmentDeadline = (deadline: string | Date) => {
+    return CourseDataProcessor.formatAssignmentDeadline(
+      typeof deadline === 'string' ? new Date(deadline) : deadline
+    )
+  }
+  
+  // 获取作业状态样式
+  const getStatusType = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return ''
+      case 'submitted':
+        return 'success'
+      case 'late':
+        return 'danger'
+      default:
+        return ''
+    }
+  }
+  
+  // 获取作业状态文本
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return '待提交'
+      case 'submitted':
+        return '已提交'
+      case 'late':
+        return '已逾期'
+      default:
+        return status
+    }
+  }
 
 // 根据ID从processedCourses.json获取课程详情
 const getCourseDetail = () => {
@@ -199,10 +332,27 @@ const openAddAssignmentDialog = () => {
   }
 }
 
-// 组件挂载时获取课程详情
-onMounted(() => {
-  getCourseDetail()
-})
+// 获取课程作业
+  const loadCourseAssignments = () => {
+    if (course.value && course.value.id) {
+      try {
+        // getAssignmentsByCourseId is a computed property that returns a function
+        const assignments = assignmentStore.getAssignmentsByCourseId(course.value.id.toString())
+        courseAssignments.value = assignments
+      } catch (error) {
+        console.error('获取课程作业失败:', error)
+      }
+    }
+  }
+
+  // 组件挂载时获取课程详情和作业
+    onMounted(() => {
+      getCourseDetail()
+      // 确保在获取课程详情后加载作业
+      setTimeout(() => {
+        loadCourseAssignments()
+      }, 100)
+    })
 </script>
 
 <style scoped>
@@ -296,4 +446,40 @@ onMounted(() => {
     gap: 5px;
   }
 }
-</style>
+
+/* 作业列表样式 */
+.assignments-card {
+  margin-top: 20px;
+}
+
+.assignments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assignment-item {
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #00a2ae;
+}
+
+.assignment-content {
+  font-size: 16px;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.assignment-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.assignment-deadline {
+  font-size: 13px;
+}
+  </style>

@@ -27,6 +27,30 @@
               </el-tag>
             </div>
             <div class="assignment-content">{{ assignment.content }}</div>
+            
+            <!-- 附件显示区域 -->
+            <div v-if="assignment.attachments && assignment.attachments.length > 0" class="attachments-container">
+              <div class="attachments-title">附件：</div>
+              <div class="attachments-list">
+                <div v-for="(attachment, index) in assignment.attachments" :key="index" class="attachment-item">
+                  <!-- 图片类型直接预览 -->
+                  <div v-if="isImageType(attachment.type)" class="image-attachment">
+                    <el-image :src="attachment.url" :preview-src-list="[attachment.url]" style="width: 100px; height: 100px;" />
+                    <div class="attachment-name">{{ attachment.name }}</div>
+                  </div>
+                  <!-- 其他类型显示图标和名称 -->
+                  <div v-else class="file-attachment">
+                    <el-icon size="24"><Document /></el-icon>
+                    <div class="attachment-info">
+                      <div class="attachment-name">{{ attachment.name }}</div>
+                      <div class="attachment-size">{{ formatFileSize(attachment.url) }}</div>
+                    </div>
+                    <el-button type="text" size="small" @click="downloadAttachment(attachment)">下载</el-button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <div class="assignment-actions">
               <el-button type="text" size="small" @click="handleViewDetails(assignment)">
                 查看详情
@@ -59,6 +83,7 @@ import { defineComponent, computed } from 'vue';
 import type { Assignment } from '../core/types';
 import { CourseDataProcessor } from '../core/courseDataProcessor';
 import type { Course } from '../types/course';
+import { Document } from '@element-plus/icons-vue';
 
 export default defineComponent({
   name: 'AssignmentList',
@@ -104,6 +129,44 @@ export default defineComponent({
     const getCourseName = (courseId: string): string => {
       const course = props.courses.find(c => c.id === courseId);
       return course ? course.name : '未知课程';
+    };
+
+    // 判断是否为图片类型
+    const isImageType = (type: string) => {
+      return type.startsWith('image/');
+    };
+
+    // 格式化文件大小
+    const formatFileSize = (url: string) => {
+      // 这里简化处理，实际应用中可以从文件本身获取大小
+      // 对于data URL，可以尝试解析base64数据获取大小
+      if (url.startsWith('data:')) {
+        // 提取base64部分
+        const base64Part = url.split(',')[1];
+        if (base64Part) {
+          const bytes = base64Part.length * 0.75;
+          if (bytes < 1024) return `${bytes.toFixed(0)} B`;
+          if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+          return `${(bytes / 1048576).toFixed(1)} MB`;
+        }
+      }
+      return '未知大小';
+    };
+
+    // 下载附件
+    const downloadAttachment = (attachment: { name: string; url: string }) => {
+      if (attachment.url.startsWith('data:')) {
+        // 对于data URL，创建下载链接
+        const link = document.createElement('a');
+        link.href = attachment.url;
+        link.download = attachment.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // 对于普通URL，可以直接打开或实现其他下载逻辑
+        window.open(attachment.url, '_blank');
+      }
     };
 
     // 获取状态的文本表示
@@ -155,7 +218,10 @@ export default defineComponent({
       handleViewDetails,
       handleEdit,
       handleDelete,
-      handleSubmit
+      handleSubmit,
+      isImageType,
+      formatFileSize,
+      downloadAttachment
     };
   }
 });

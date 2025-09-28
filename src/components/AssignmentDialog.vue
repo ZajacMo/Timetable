@@ -14,16 +14,29 @@
       <el-form-item label="选择课程" prop="courseId">
         <el-select 
           v-model="assignmentForm.courseId" 
-          placeholder="请选择课程"
+          placeholder="请选择课程或手动输入"
           style="width: 100%"
+          filterable
+          allow-create
+          default-first-option
+          :remote-method="handleRemoteSearch"
+          remote
         >
           <el-option 
-            v-for="course in courses" 
+            v-for="course in filteredCourses" 
             :key="course.id" 
             :label="course.name"
-            :value="course.id"
+            :value="course.name"
           ></el-option>
         </el-select>
+        <div v-if="isCreatingNewCourse" class="create-course-tip">
+          <span>将创建新课程：</span>
+          <el-input 
+            v-model="newCourseName" 
+            placeholder="请输入新课程名称" 
+            style="margin-top: 10px;"
+          />
+        </div>
       </el-form-item>
       
       <el-form-item label="作业内容" prop="content">
@@ -52,6 +65,26 @@
           <el-radio label="late">已逾期</el-radio>
         </el-radio-group>
       </el-form-item>
+
+      <!-- 附件上传 -->
+      <el-form-item label="附件上传">
+        <el-upload
+          v-model:file-list="fileList"
+          action="#"
+          :auto-upload="false"
+          :on-change="handleFileChange"
+          :before-upload="beforeUpload"
+          list-type="picture-card"
+          accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
+          multiple
+        >
+          <el-icon><Plus /></el-icon>
+          <div class="el-upload__text">
+            点击或拖拽文件到此处上传
+          </div>
+        </el-upload>
+        <div class="upload-tip">支持jpg、png、pdf、doc等多种格式文件上传</div>
+      </el-form-item>
     </el-form>
     
     <template #footer>
@@ -67,6 +100,9 @@
 import { defineComponent, ref, reactive, watch, computed } from 'vue';
 import type { Assignment } from '../core/types';
 import type { Course } from '../types/course';
+import { Plus } from '@element-plus/icons-vue';
+import { useCoursesStore } from '../stores/courses';
+import { useSettingsStore } from '../stores/settings';
 
 export default defineComponent({
   name: 'AssignmentDialog',
@@ -118,8 +154,43 @@ export default defineComponent({
       courseId: '',
       content: '',
       deadline: new Date(),
-      status: 'pending' as 'pending' | 'submitted' | 'late'
+      status: 'pending' as 'pending' | 'submitted' | 'late',
+      attachments: [] as Array<{ name: string; url: string; type: string }>
     });
+
+    // 课程存储
+    const coursesStore = useCoursesStore();
+    const settingsStore = useSettingsStore();
+
+    // 用于支持搜索的过滤后课程
+    const filteredCourses = computed(() => {
+      if (props.courses) {
+        return props.courses;
+      }
+      return coursesStore.getCourses();
+    });
+
+    // 是否正在创建新课程
+    const isCreatingNewCourse = ref(false);
+    const newCourseName = ref('');
+    const fileList = ref<any[]>([]);
+
+    // 设置默认截止时间为次日的指定时间
+    const setDefaultDeadline = () => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // 从设置中获取默认截止时间
+      if (settingsStore.settings.assignment?.defaultDeadline?.enabled && settingsStore.settings.assignment.defaultDeadline.time) {
+        const [hours, minutes] = settingsStore.settings.assignment.defaultDeadline.time.split(':').map(Number);
+        tomorrow.setHours(hours || 20, minutes || 0, 0, 0);
+      } else {
+        // 默认使用20:00
+        tomorrow.setHours(20, 0, 0, 0);
+      }
+      
+      return tomorrow;
+    };
 
     // 是否为编辑模式
     const isEdit = computed(() => props.mode === 'edit' || !!props.editAssignment);
@@ -163,8 +234,12 @@ export default defineComponent({
       assignmentForm.id = '';
       assignmentForm.courseId = '';
       assignmentForm.content = '';
-      assignmentForm.deadline = new Date();
+      assignmentForm.deadline = setDefaultDeadline();
       assignmentForm.status = 'pending';
+      assignmentForm.attachments = [];
+      fileList.value = [];
+      isCreatingNewCourse.value = false;
+      newCourseName.value = '';
     };
 
     // 监听编辑作业的变化，更新表单数据
@@ -173,13 +248,46 @@ export default defineComponent({
         assignmentForm.id = newAssignment.id;
         assignmentForm.courseId = newAssignment.courseId;
         assignmentForm.content = newAssignment.content;
-        assignmentForm.deadline = new Date(newAssignment.deadline);
+        assignmentForm.deadline = newAssignment.deadline ? new Date(newAssignment.deadline) : setDefaultDeadline();
         assignmentForm.status = newAssignment.status;
+        assignmentForm.attachments = newAssignment.attachments || [];
+        // 恢复文件列表
+        fileList.value = assignmentForm.attachments.map(attach => ({
+          name: attach.name,
+          url: attach.url,
+          status: 'success'
+        }));
       } else {
         // 重置表单
         resetForm();
       }
     }, { immediate: true });
+
+    // 处理远程搜索
+    const handleRemoteSearch = (query: string) => {
+      if (query && !props.courses.find(c => c.id === query)) {
+        isCreatingNewCourse.value = true;
+        newCourseName.value = query;
+      } else {
+        isCreatingNewCourse.value = false;
+      }
+    };
+
+    // 处理文件变化
+    const handleFileChange = (uploadFile: any, uploadFiles: any[]) => {
+      fileList.value = uploadFiles;
+    };
+
+    // 上传前检查
+    const beforeUpload = (file: File) => {
+      // 实际应用中这里可以添加文件大小和类型的验证
+      const isLt10M = file.size / 1024 / 1024 < 10;
+      if (!isLt10M) {
+        ElMessage.error('文件大小不能超过10MB!');
+        return false;
+      }
+      return true;
+    };
 
     // 监听modelValue变为true时，设置课程ID
     watch(() => props.modelValue, (newValue) => {
@@ -211,13 +319,28 @@ export default defineComponent({
       try {
         await assignmentFormRef.value?.validate();
         
+        // 处理创建新课程的情况
+        let courseId = assignmentForm.courseId;
+        // 直接使用课程名称作为ID，简化逻辑
+        if (isCreatingNewCourse.value && newCourseName.value) {
+          courseId = newCourseName.value;
+        }
+        
+        // 处理附件
+        const attachments = fileList.value.map(file => ({
+          name: file.name,
+          url: file.url || `data:${file.raw.type};base64,${btoa(String.fromCharCode(...new Uint8Array(file.raw)))}`,
+          type: file.raw.type
+        }));
+        
         // 准备提交的数据
-        const assignmentData: Assignment = {
+        const assignmentData: any = {
           id: isEdit.value ? assignmentForm.id : '',
-          courseId: assignmentForm.courseId,
+          courseId: courseId,
           content: assignmentForm.content,
           deadline: new Date(assignmentForm.deadline),
-          status: assignmentForm.status
+          status: assignmentForm.status,
+          attachments: attachments
         };
         
         emit('submit', assignmentData);

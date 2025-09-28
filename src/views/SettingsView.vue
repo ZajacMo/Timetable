@@ -38,6 +38,24 @@
         </div>
       </div>
 
+      <!-- 作业默认截止时间设置 -->
+      <div class="setting-group">
+        <label class="setting-label">作业默认截止时间</label>
+        <div class="setting-control">
+          <label class="switch">
+            <input type="checkbox" v-model="assignmentDefaultDeadlineEnabled" @change="updateAssignmentSettings">
+            <span class="slider round"></span>
+          </label>
+          <div v-if="assignmentDefaultDeadlineEnabled" class="time-setting">
+            <input 
+              type="time" 
+              v-model="assignmentDefaultDeadlineTime" 
+              @change="updateAssignmentSettings"
+            >
+          </div>
+        </div>
+      </div>
+
       <!-- 显示周末 -->
       <div class="setting-group">
         <label class="setting-label">显示周末</label>
@@ -276,6 +294,10 @@ const classDuration = ref(settingsStore.settings.display.classDuration || 45)
 const maxDailyCourses = ref(settingsStore.settings.display.maxDailyCourses || 6)
 const sectionTimes = ref({...settingsStore.settings.display.sectionTimes || {}})
 
+// 作业默认截止时间设置
+const assignmentDefaultDeadlineEnabled = ref(settingsStore.settings.assignment?.defaultDeadline?.enabled || true)
+const assignmentDefaultDeadlineTime = ref(settingsStore.settings.assignment?.defaultDeadline?.time || '20:00')
+
 // 学期设置
 const semesterName = ref(settingsStore.settings.semester.name)
 const semesterStartDate = ref(settingsStore.settings.semester.startDate.split('T')[0]) // 格式化为YYYY-MM-DD
@@ -309,6 +331,19 @@ const updateNotifications = () => {
     notifications: {
       ...settingsStore.settings.notifications,
       enabled: notifications.value
+    }
+  })
+}
+
+// 更新作业设置
+const updateAssignmentSettings = () => {
+  settingsStore.updateSettings({
+    assignment: {
+      ...settingsStore.settings.assignment,
+      defaultDeadline: {
+        enabled: assignmentDefaultDeadlineEnabled.value,
+        time: assignmentDefaultDeadlineTime.value
+      }
     }
   })
 }

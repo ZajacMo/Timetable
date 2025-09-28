@@ -56,6 +56,14 @@ export interface AppSettings {
   // 节假日课程调整设置
   holidayCourseAdjustments: HolidayCourseAdjustment[]
   
+  // 作业设置
+  assignment: {
+    defaultDeadline: {
+      enabled: boolean
+      time: string
+    }
+  }
+  
   // 其他设置
   other: {
     animationEnabled: boolean
@@ -104,6 +112,13 @@ export const useSettingsStore = defineStore('settings', () => {
     },
     // 初始化节假日课程调整为空数组
     holidayCourseAdjustments: [],
+    // 作业设置
+    assignment: {
+      defaultDeadline: {
+        enabled: true,
+        time: '20:00'
+      }
+    },
     other: {
       animationEnabled: true,
       soundEnabled: false,
@@ -183,6 +198,9 @@ export const useSettingsStore = defineStore('settings', () => {
         ? { ...settings.value.semester, ...updatedSettings.semester }
         : settings.value.semester,
       holidayCourseAdjustments: updatedSettings.holidayCourseAdjustments || settings.value.holidayCourseAdjustments,
+      assignment: updatedSettings.assignment
+        ? { ...settings.value.assignment, ...updatedSettings.assignment }
+        : settings.value.assignment,
       other: updatedSettings.other
         ? { ...settings.value.other, ...updatedSettings.other }
         : settings.value.other

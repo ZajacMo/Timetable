@@ -62,6 +62,7 @@ export interface Assignment {
   content: string;
   deadline: Date;
   status: 'pending' | 'submitted' | 'late';
+  attachments?: Array<{name: string; url: string; type: string}>;
 }
 
 export interface StorageProvider {

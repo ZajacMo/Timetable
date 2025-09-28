@@ -107,7 +107,7 @@ const handleAddAssignment = () => {
 }
 
 // 处理提交作业
-const handleSubmitAssignment = (assignmentData: any) => {
+const handleSubmitAssignment = (_assignmentData: any) => {
   // 这里可以添加作业提交后的处理逻辑
   showAddAssignmentDialog.value = false
   // 可以通过emit将作业数据传递给父组件

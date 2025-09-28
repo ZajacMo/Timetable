@@ -19,11 +19,9 @@
           filterable
           allow-create
           default-first-option
-          :remote-method="handleRemoteSearch"
-          remote
         >
           <el-option 
-            v-for="course in filteredCourses" 
+            v-for="course in availableCourses" 
             :key="course.id" 
             :label="course.name"
             :value="course.name"
@@ -72,8 +70,6 @@
           v-model:file-list="fileList"
           action="#"
           :auto-upload="false"
-          :on-change="handleFileChange"
-          :before-upload="beforeUpload"
           list-type="picture-card"
           accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
           multiple
@@ -100,7 +96,6 @@
 import { defineComponent, ref, reactive, watch, computed } from 'vue';
 import type { Assignment } from '../core/types';
 import type { Course } from '../types/course';
-import { Plus } from '@element-plus/icons-vue';
 import { useCoursesStore } from '../stores/courses';
 import { useSettingsStore } from '../stores/settings';
 
@@ -162,12 +157,12 @@ export default defineComponent({
     const coursesStore = useCoursesStore();
     const settingsStore = useSettingsStore();
 
-    // 用于支持搜索的过滤后课程
-    const filteredCourses = computed(() => {
-      if (props.courses) {
+    // 可用课程列表
+    const availableCourses = computed(() => {
+      if (props.courses && props.courses.length > 0) {
         return props.courses;
       }
-      return coursesStore.getCourses();
+      return coursesStore.courses;
     });
 
     // 是否正在创建新课程
@@ -263,31 +258,10 @@ export default defineComponent({
       }
     }, { immediate: true });
 
-    // 处理远程搜索
-    const handleRemoteSearch = (query: string) => {
-      if (query && !props.courses.find(c => c.id === query)) {
-        isCreatingNewCourse.value = true;
-        newCourseName.value = query;
-      } else {
-        isCreatingNewCourse.value = false;
-      }
-    };
-
-    // 处理文件变化
-    const handleFileChange = (uploadFile: any, uploadFiles: any[]) => {
-      fileList.value = uploadFiles;
-    };
-
-    // 上传前检查
-    const beforeUpload = (file: File) => {
-      // 实际应用中这里可以添加文件大小和类型的验证
-      const isLt10M = file.size / 1024 / 1024 < 10;
-      if (!isLt10M) {
-        ElMessage.error('文件大小不能超过10MB!');
-        return false;
-      }
-      return true;
-    };
+    // 注意：以下处理函数已被移除，因为当前版本未使用
+    // - handleRemoteSearch
+    // - handleFileChange
+    // - beforeUpload
 
     // 监听modelValue变为true时，设置课程ID
     watch(() => props.modelValue, (newValue) => {
@@ -365,7 +339,11 @@ export default defineComponent({
       dialogWidth,
       handleClose,
       handleSubmit,
-      show
+      show,
+      isCreatingNewCourse,
+      newCourseName,
+      fileList,
+      availableCourses
     };
   }
 });

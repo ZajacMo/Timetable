@@ -101,13 +101,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import processedCourses from '../../processedCourses.json'
-import AssignmentDialog from '../components/AssignmentDialog.vue'
-import { useScheduleStore } from '../stores/schedule'
-import { useAssignmentStore } from '../stores/assignment'
-import { CourseDataProcessor } from '../core/courseDataProcessor'
+import processedCourses from '@/../processedCourses.json'
+import AssignmentDialog from '@/components/AssignmentDialog.vue'
+import { useScheduleStore } from '@/stores/schedule'
+import { useAssignmentStore } from '@/stores/assignment'
+import { CourseDataProcessor } from '@/core/courseDataProcessor'
 import { ElMessage } from 'element-plus'
 
 // 定义课程接口
@@ -156,34 +156,6 @@ const courseId = route.query.id
 // 初始化课程作业列表
 const courseAssignments = ref<any[]>([])
 
-  // 处理作业提交 - 暂时保留但不使用
-  const handleAssignmentSubmit = async (assignmentData: any) => {
-    try {
-      // 添加作业到assignment store
-      if (assignmentDialogMode.value === 'add') {
-        await assignmentStore.addAssignment(assignmentData)
-        
-        // 将作业截止日期添加到日程表
-        await scheduleStore.addSchedule({
-          title: `作业截止: ${assignmentData.content}`,
-          startDate: new Date(assignmentData.deadline),
-          endDate: new Date(assignmentData.deadline),
-          description: `课程: ${course.value?.name}`,
-          isAllDay: false,
-          color: '#f05261'
-        })
-      } else {
-        await assignmentStore.updateAssignment(assignmentData.id, assignmentData)
-      }
-      
-      showAssignmentDialog.value = false
-        // 刷新作业列表
-        loadCourseAssignments()
-    } catch (error) {
-      console.error('保存作业失败:', error)
-    }
-  }
-  
   // 重命名为避免函数名重复
   const handleAssignmentSubmitNew = async (assignmentData: any) => {
     try {

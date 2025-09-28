@@ -83,7 +83,7 @@ import { defineComponent, computed } from 'vue';
 import type { Assignment } from '../core/types';
 import { CourseDataProcessor } from '../core/courseDataProcessor';
 import type { Course } from '../types/course';
-import { Document } from '@element-plus/icons-vue';
+// Document图标已移除，因为当前未使用
 
 export default defineComponent({
   name: 'AssignmentList',

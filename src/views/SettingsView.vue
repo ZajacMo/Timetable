@@ -3,34 +3,29 @@
     <h2>设置</h2>
     
     <!-- 设置表单 -->
-    <form class="settings-form">
+    <div class="settings-list">
       <!-- 主题设置 -->
-      <div class="setting-group">
-        <label class="setting-label">主题</label>
-        <div class="setting-control">
-          <select v-model="theme" @change="updateTheme">
-            <option value="light">浅色模式</option>
-            <option value="dark">深色模式</option>
-            <option value="system">跟随系统</option>
-          </select>
+      <div class="setting-item" @click="openDrawer('theme')">
+        <span class="setting-label">主题</span>
+        <div class="setting-value">
+          {{ themeOptions.find(opt => opt.value === theme)?.label || '' }}
+          <span class="chevron"></span>
         </div>
       </div>
 
       <!-- 语言设置 -->
-      <div class="setting-group">
-        <label class="setting-label">语言</label>
-        <div class="setting-control">
-          <select v-model="language" @change="updateLanguage">
-            <option value="zh-CN">简体中文</option>
-            <option value="en-US">English</option>
-          </select>
+      <div class="setting-item" @click="openDrawer('language')">
+        <span class="setting-label">语言</span>
+        <div class="setting-value">
+          {{ languageOptions.find(opt => opt.value === language)?.label || '' }}
+          <span class="chevron"></span>
         </div>
       </div>
 
       <!-- 通知设置 -->
-      <div class="setting-group">
-        <label class="setting-label">通知提醒</label>
-        <div class="setting-control">
+      <div class="setting-item">
+        <span class="setting-label">通知提醒</span>
+        <div class="setting-value">
           <label class="switch">
             <input type="checkbox" v-model="notifications" @change="updateNotifications">
             <span class="slider round"></span>
@@ -39,27 +34,20 @@
       </div>
 
       <!-- 作业默认截止时间设置 -->
-      <div class="setting-group">
-        <label class="setting-label">作业默认截止时间</label>
-        <div class="setting-control">
+      <div class="setting-item">
+        <span class="setting-label">作业默认截止时间</span>
+        <div class="setting-value">
           <label class="switch">
             <input type="checkbox" v-model="assignmentDefaultDeadlineEnabled" @change="updateAssignmentSettings">
             <span class="slider round"></span>
           </label>
-          <div v-if="assignmentDefaultDeadlineEnabled" class="time-setting">
-            <input 
-              type="time" 
-              v-model="assignmentDefaultDeadlineTime" 
-              @change="updateAssignmentSettings"
-            >
-          </div>
         </div>
       </div>
 
       <!-- 显示周末 -->
-      <div class="setting-group">
-        <label class="setting-label">显示周末</label>
-        <div class="setting-control">
+      <div class="setting-item">
+        <span class="setting-label">显示周末</span>
+        <div class="setting-value">
           <label class="switch">
             <input type="checkbox" v-model="showWeekends" @change="updateShowWeekends">
             <span class="slider round"></span>
@@ -68,51 +56,158 @@
       </div>
 
       <!-- 每日课程最大数量限制 -->
-      <div class="setting-group">
-        <label class="setting-label">每日课程最大数量</label>
-        <div class="setting-control">
-          <input 
-            type="number" 
-            v-model="maxDailyCourses" 
-            @change="updateMaxDailyCourses"
-            min="1" 
-            max="20"
-            placeholder="输入每日最多显示的课程数量"
-          >
-          <p class="setting-hint">设置为0表示不限制</p>
+      <div class="setting-item" @click="openDrawer('maxDailyCourses')">
+        <span class="setting-label">每日课程最大数量</span>
+        <div class="setting-value">
+          {{ maxDailyCourses || '不限制' }}
+          <span class="chevron"></span>
         </div>
       </div>
 
       <!-- 课程表显示模式 -->
-      <div class="setting-group">
-        <label class="setting-label">课程表显示模式</label>
-        <div class="setting-control">
-          <select v-model="displayMode" @change="updateDisplayMode">
-            <option value="grid">网格视图</option>
-            <option value="list">列表视图</option>
-          </select>
+      <div class="setting-item" @click="openDrawer('displayMode')">
+        <span class="setting-label">课程表显示模式</span>
+        <div class="setting-value">
+          {{ displayModeOptions.find(opt => opt.value === displayMode)?.label || '' }}
+          <span class="chevron"></span>
         </div>
       </div>
 
       <!-- 每节课时长 -->
-      <div class="setting-group">
-        <label class="setting-label">每节课时长(分钟)</label>
-        <div class="setting-control">
-          <input 
-            type="number" 
-            v-model="classDuration" 
-            @change="updateClassDuration"
-            min="30" 
-            max="120"
-          >
+      <div class="setting-item" @click="openDrawer('classDuration')">
+        <span class="setting-label">每节课时长(分钟)</span>
+        <div class="setting-value">
+          {{ classDuration }}
+          <span class="chevron"></span>
         </div>
       </div>
 
       <!-- 课程时间配置 -->
-      <div class="setting-group">
-        <label class="setting-label">课程时间配置</label>
-        <div class="setting-control">
-          <div class="section-times-container">
+      <div class="setting-item" @click="openDrawer('sectionTimes')">
+        <span class="setting-label">课程时间配置</span>
+        <div class="setting-value">
+          <span class="summary-text">点击配置各节课时间</span>
+          <span class="chevron"></span>
+        </div>
+      </div>
+
+      <!-- 学期设置 -->
+      <div class="setting-item" @click="openDrawer('semester')">
+        <span class="setting-label">学期设置</span>
+        <div class="setting-value">
+          <span class="summary-text">{{ semesterName }}</span>
+          <span class="chevron"></span>
+        </div>
+      </div>
+
+      <!-- 节假日课程调整 -->
+      <div class="setting-item" @click="openDrawer('holidayAdjustments')">
+        <span class="setting-label">节假日课程调整</span>
+        <div class="setting-value">
+          <span class="summary-text">{{ holidayAdjustments.length }}条记录</span>
+          <span class="chevron"></span>
+        </div>
+      </div>
+
+      <!-- 数据备份与恢复 -->
+      <div class="setting-item" @click="openDrawer('dataManager')">
+        <span class="setting-label">数据管理</span>
+        <div class="setting-value">
+          <span class="summary-text">导出/导入/重置</span>
+          <span class="chevron"></span>
+        </div>
+      </div>
+
+      <!-- 关于 -->
+      <div class="setting-item" @click="openDrawer('about')">
+        <span class="setting-label">关于</span>
+        <div class="setting-value">
+          <span class="summary-text">课程表管理系统</span>
+          <span class="chevron"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 抽屉组件 -->
+    <div v-if="drawerVisible" class="drawer-overlay" @click="closeDrawer">
+      <div class="drawer" @click.stop>
+        <div class="drawer-header">
+          <h3>{{ getDrawerTitle() }}</h3>
+          <button class="drawer-close" @click="closeDrawer">×</button>
+        </div>
+        <div class="drawer-content">
+          <!-- 主题选择 -->
+          <div v-if="currentDrawer === 'theme'" class="option-list">
+            <div 
+              v-for="option in themeOptions" 
+              :key="option.value" 
+              class="option-item" 
+              :class="{ selected: theme === option.value }"
+              @click="selectOption('theme', option.value)"
+            >
+              <span>{{ option.label }}</span>
+              <div v-if="theme === option.value" class="check-icon"></div>
+            </div>
+          </div>
+
+          <!-- 语言选择 -->
+          <div v-if="currentDrawer === 'language'" class="option-list">
+            <div 
+              v-for="option in languageOptions" 
+              :key="option.value" 
+              class="option-item" 
+              :class="{ selected: language === option.value }"
+              @click="selectOption('language', option.value)"
+            >
+              <span>{{ option.label }}</span>
+              <div v-if="language === option.value" class="check-icon"></div>
+            </div>
+          </div>
+
+          <!-- 每日课程最大数量 -->
+          <div v-if="currentDrawer === 'maxDailyCourses'" class="input-section">
+            <label>每日课程最大数量</label>
+            <input 
+              type="number" 
+              v-model="maxDailyCourses" 
+              min="1" 
+              max="20"
+              placeholder="输入每日最多显示的课程数量"
+              class="drawer-input"
+            >
+            <p class="input-hint">设置为0表示不限制</p>
+            <button class="drawer-action-btn" @click="updateMaxDailyCourses">保存</button>
+          </div>
+
+          <!-- 课程表显示模式 -->
+          <div v-if="currentDrawer === 'displayMode'" class="option-list">
+            <div 
+              v-for="option in displayModeOptions" 
+              :key="option.value" 
+              class="option-item" 
+              :class="{ selected: displayMode === option.value }"
+              @click="selectOption('displayMode', option.value)"
+            >
+              <span>{{ option.label }}</span>
+              <div v-if="displayMode === option.value" class="check-icon"></div>
+            </div>
+          </div>
+
+          <!-- 每节课时长 -->
+          <div v-if="currentDrawer === 'classDuration'" class="input-section">
+            <label>每节课时长(分钟)</label>
+            <input 
+              type="number" 
+              v-model="classDuration" 
+              min="30" 
+              max="120"
+              class="drawer-input"
+            >
+            <button class="drawer-action-btn" @click="updateClassDuration">保存</button>
+          </div>
+
+          <!-- 课程时间配置 -->
+          <div v-if="currentDrawer === 'sectionTimes'" class="section-times-container">
             <div 
               v-for="(_timeInfo, section) in sectionTimes" 
               :key="section" 
@@ -121,33 +216,27 @@
               <input 
                 type="time" 
                 v-model="sectionTimes[section].startTime" 
-                @change="updateSectionTimes"
                 class="time-input"
               >
               <span class="time-separator">-</span>
               <input 
                 type="time" 
                 v-model="sectionTimes[section].endTime" 
-                @change="updateSectionTimes"
                 class="time-input"
               >
             </div>
+            <button class="drawer-action-btn" @click="updateSectionTimes">保存</button>
           </div>
-        </div>
-      </div>
 
-      <!-- 学期设置 -->
-      <div class="setting-group">
-        <label class="setting-label">学期设置</label>
-        <div class="setting-control">
-          <div class="semester-settings">
+          <!-- 学期设置 -->
+          <div v-if="currentDrawer === 'semester'" class="semester-settings">
             <div class="semester-setting-item">
               <label>学期名称</label>
               <input 
                 type="text" 
                 v-model="semesterName" 
-                @change="updateSemesterSettings"
                 placeholder="如：2023-2024学年第1学期"
+                class="drawer-input"
               >
             </div>
             <div class="semester-setting-item">
@@ -155,7 +244,7 @@
               <input 
                 type="date" 
                 v-model="semesterStartDate" 
-                @change="updateSemesterSettings"
+                class="drawer-input"
               >
             </div>
             <div class="semester-setting-item">
@@ -163,112 +252,98 @@
               <input 
                 type="number" 
                 v-model="semesterWeeksCount" 
-                @change="updateSemesterSettings"
                 min="1" 
                 max="30"
+                class="drawer-input"
               >
             </div>
+            <button class="drawer-action-btn" @click="updateSemesterSettings">保存</button>
           </div>
-        </div>
-      </div>
 
-      <!-- 节假日课程调整 -->
-      <div class="setting-group">
-        <label class="setting-label">节假日课程调整</label>
-        <div class="setting-control">
-          <div class="holiday-adjustment-form">
-            <div class="form-row">
-              <div class="form-item">
-                <label>原课程周次</label>
-                <input type="number" v-model="newAdjustment.originalWeek" min="1" :max="semesterWeeksCount" placeholder="输入周次" />
+          <!-- 节假日课程调整 -->
+          <div v-if="currentDrawer === 'holidayAdjustments'" class="holiday-adjustment-section">
+            <div class="holiday-adjustment-form">
+              <div class="form-row">
+                <div class="form-item">
+                  <label>原课程周次</label>
+                  <input type="number" v-model="newAdjustment.originalWeek" min="1" :max="semesterWeeksCount" placeholder="输入周次" class="drawer-input" />
+                </div>
+                <div class="form-item">
+                  <label>原课程日期</label>
+                  <select v-model="newAdjustment.originalDay" class="drawer-select">
+                    <option value="1">星期一</option>
+                    <option value="2">星期二</option>
+                    <option value="3">星期三</option>
+                    <option value="4">星期四</option>
+                    <option value="5">星期五</option>
+                    <option value="6">星期六</option>
+                    <option value="7">星期日</option>
+                  </select>
+                </div>
               </div>
-              <div class="form-item">
-                <label>原课程日期</label>
-                <select v-model="newAdjustment.originalDay">
-                  <option value="1">星期一</option>
-                  <option value="2">星期二</option>
-                  <option value="3">星期三</option>
-                  <option value="4">星期四</option>
-                  <option value="5">星期五</option>
-                  <option value="6">星期六</option>
-                  <option value="7">星期日</option>
-                </select>
+              
+              <div class="form-row">
+                <div class="form-item">
+                  <label>目标周次</label>
+                  <input type="number" v-model="newAdjustment.targetWeek" min="1" :max="semesterWeeksCount" placeholder="输入周次" class="drawer-input" />
+                </div>
+                <div class="form-item">
+                  <label>目标日期</label>
+                  <select v-model="newAdjustment.targetDay" class="drawer-select">
+                    <option value="1">星期一</option>
+                    <option value="2">星期二</option>
+                    <option value="3">星期三</option>
+                    <option value="4">星期四</option>
+                    <option value="5">星期五</option>
+                    <option value="6">星期六</option>
+                    <option value="7">星期日</option>
+                  </select>
+                </div>
               </div>
+              
+              <div class="form-row">
+                <div class="form-item full-width">
+                  <label>调整原因</label>
+                  <input type="text" v-model="newAdjustment.reason" placeholder="例如：国庆节调课" class="drawer-input" />
+                </div>
+              </div>
+              
+              <button class="drawer-action-btn" @click="addAdjustment">添加调整记录</button>
             </div>
             
-            <div class="form-row">
-              <div class="form-item">
-                <label>目标周次</label>
-                <input type="number" v-model="newAdjustment.targetWeek" min="1" :max="semesterWeeksCount" placeholder="输入周次" />
+            <!-- 调整记录列表 -->
+            <div class="adjustment-list" v-if="holidayAdjustments.length > 0">
+              <h4>现有调整记录</h4>
+              <div class="adjustment-item" v-for="adjustment in holidayAdjustments" :key="adjustment.id">
+                <div class="adjustment-info">
+                  <span class="adjustment-period">第{{ adjustment.originalWeek }}周{{ getDayName(adjustment.originalDay) }}</span>
+                  <span class="adjustment-arrow">→</span>
+                  <span class="adjustment-period">第{{ adjustment.targetWeek }}周{{ getDayName(adjustment.targetDay) }}</span>
+                </div>
+                <div class="adjustment-reason">{{ adjustment.reason }}</div>
+                <button class="delete-btn" @click="deleteAdjustment(adjustment.id)">删除</button>
               </div>
-              <div class="form-item">
-                <label>目标日期</label>
-                <select v-model="newAdjustment.targetDay">
-                  <option value="1">星期一</option>
-                  <option value="2">星期二</option>
-                  <option value="3">星期三</option>
-                  <option value="4">星期四</option>
-                  <option value="5">星期五</option>
-                  <option value="6">星期六</option>
-                  <option value="7">星期日</option>
-                </select>
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-item full-width">
-                <label>调整原因</label>
-                <input type="text" v-model="newAdjustment.reason" placeholder="例如：国庆节调课" />
-              </div>
-            </div>
-            
-            <button class="action-button" @click="addAdjustment">添加调整记录</button>
-          </div>
-          
-          <!-- 调整记录列表 -->
-          <div class="adjustment-list" v-if="holidayAdjustments.length > 0">
-            <h4>现有调整记录</h4>
-            <div class="adjustment-item" v-for="adjustment in holidayAdjustments" :key="adjustment.id">
-              <div class="adjustment-info">
-                <span class="adjustment-period">第{{ adjustment.originalWeek }}周{{ getDayName(adjustment.originalDay) }}</span>
-                <span class="adjustment-arrow">→</span>
-                <span class="adjustment-period">第{{ adjustment.targetWeek }}周{{ getDayName(adjustment.targetDay) }}</span>
-              </div>
-              <div class="adjustment-reason">{{ adjustment.reason }}</div>
-              <button class="delete-btn" @click="deleteAdjustment(adjustment.id)">删除</button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- 数据备份与恢复 -->
-      <div class="setting-group">
-        <label class="setting-label">数据管理</label>
-        <div class="setting-actions">
-          <button type="button" class="action-button" @click="exportData">
-            导出数据
-          </button>
-          <button type="button" class="action-button" @click="importData">
-            导入数据
-          </button>
-          <button type="button" class="action-button danger" @click="resetData">
-            重置数据
-          </button>
-        </div>
-      </div>
+          <!-- 数据管理 -->
+          <div v-if="currentDrawer === 'dataManager'" class="data-manager-section">
+            <button class="drawer-action-btn" @click="exportData">导出数据</button>
+            <button class="drawer-action-btn" @click="importData">导入数据</button>
+            <button class="drawer-action-btn danger" @click="resetData">重置数据</button>
+          </div>
 
-      <!-- 关于 -->
-      <div class="setting-group">
-        <label class="setting-label">关于</label>
-        <div class="setting-control">
-          <div class="about-info">
-            <p>课程表管理系统</p>
-            <p>版本: v3.0.0</p>
-            <p>Vue3 + Cordova 版本</p>
+          <!-- 关于 -->
+          <div v-if="currentDrawer === 'about'" class="about-section">
+            <div class="about-info">
+              <p>课程表管理系统</p>
+              <p>版本: v3.0.0</p>
+              <p>Vue3 + Cordova 版本</p>
+            </div>
           </div>
         </div>
       </div>
-    </form>
+    </div>
   </div>
 </template>
 
@@ -313,17 +388,40 @@ const newAdjustment = ref({
   reason: ''
 })
 
+// 抽屉相关数据
+const drawerVisible = ref(false)
+const currentDrawer = ref('')
+
+// 选项列表
+const themeOptions = ref([
+  { value: 'light', label: '浅色模式' },
+  { value: 'dark', label: '深色模式' },
+  { value: 'system', label: '跟随系统' }
+])
+
+const languageOptions = ref([
+  { value: 'zh-CN', label: '简体中文' },
+  { value: 'en-US', label: 'English' }
+])
+
+const displayModeOptions = ref([
+  { value: 'grid', label: '网格视图' },
+  { value: 'list', label: '列表视图' }
+])
+
 // 方法
 const updateTheme = () => {
   settingsStore.updateSettings({
     theme: theme.value
   })
+  closeDrawer()
 }
 
 const updateLanguage = () => {
   settingsStore.updateSettings({
     language: language.value
   })
+  closeDrawer()
 }
 
 const updateNotifications = () => {
@@ -364,6 +462,7 @@ const updateDisplayMode = () => {
       timetableMode: displayMode.value
     }
   })
+  closeDrawer()
 }
 
 const updateClassDuration = () => {
@@ -373,6 +472,7 @@ const updateClassDuration = () => {
       classDuration: Number(classDuration.value)
     }
   })
+  closeDrawer()
 }
 
 const updateMaxDailyCourses = () => {
@@ -382,6 +482,7 @@ const updateMaxDailyCourses = () => {
       maxDailyCourses: Number(maxDailyCourses.value) || 999 // 0表示不限制
     }
   })
+  closeDrawer()
 }
 
 const updateSectionTimes = () => {
@@ -391,6 +492,7 @@ const updateSectionTimes = () => {
       sectionTimes: sectionTimes.value
     }
   })
+  closeDrawer()
 }
 
 // 更新学期设置
@@ -403,6 +505,54 @@ const updateSemesterSettings = () => {
       weeksCount: Number(semesterWeeksCount.value)
     }
   })
+  closeDrawer()
+}
+
+// 抽屉控制方法
+const openDrawer = (drawerType: string) => {
+  currentDrawer.value = drawerType
+  drawerVisible.value = true
+}
+
+const closeDrawer = () => {
+  drawerVisible.value = false
+  // 延迟重置当前抽屉类型，确保动画完成
+  setTimeout(() => {
+    currentDrawer.value = ''
+  }, 300)
+}
+
+const getDrawerTitle = (): string => {
+  const titles: Record<string, string> = {
+    'theme': '主题',
+    'language': '语言',
+    'maxDailyCourses': '每日课程最大数量',
+    'displayMode': '课程表显示模式',
+    'classDuration': '每节课时长',
+    'sectionTimes': '课程时间配置',
+    'semester': '学期设置',
+    'holidayAdjustments': '节假日课程调整',
+    'dataManager': '数据管理',
+    'about': '关于'
+  }
+  return titles[currentDrawer.value] || ''
+}
+
+const selectOption = (type: string, value: string) => {
+  switch (type) {
+    case 'theme':
+      theme.value = value as "light" | "dark" | "system"
+      updateTheme()
+      break
+    case 'language':
+      language.value = value as "zh-CN" | "en-US"
+      updateLanguage()
+      break
+    case 'displayMode':
+      displayMode.value = value as "daily" | "weekly"
+      updateDisplayMode()
+      break
+  }
 }
 
 // 添加节假日课程调整记录
@@ -619,78 +769,97 @@ watch(
 </script>
 
 <style scoped>
+/* 整体样式 - 安卓风格 */
 .settings-view {
-  padding: 20px;
+  padding: 0;
+  background-color: #f5f5f5;
+  min-height: 100vh;
 }
 
 .settings-view h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
+  margin: 0;
+  padding: 16px;
+  background-color: #fff;
+  font-size: 20px;
+  font-weight: 500;
+  border-bottom: 1px solid #e0e0e0;
   color: #333;
 }
 
-/* 设置表单 */
-.settings-form {
+/* 设置列表 - 安卓风格单行布局 */
+.settings-list {
+  background-color: #f5f5f5;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  margin-bottom: 8px;
+  border-radius: 0;
+  position: relative;
+  transition: background-color 0.2s;
 }
 
-/* 设置组 */
-.setting-group {
-  border-bottom: 1px solid #eee;
+.setting-item:hover {
+  background-color: #f9f9f9;
 }
 
-.setting-group:last-child {
-  border-bottom: none;
+.setting-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background-color: #e0e0e0;
+}
+
+.setting-item:last-child::after {
+  display: none;
 }
 
 .setting-label {
-  display: block;
-  padding: 15px 20px;
-  font-weight: 600;
+  font-size: 16px;
   color: #333;
-  background-color: #f9f9f9;
-  border-bottom: 1px solid #eee;
 }
 
-.setting-control {
-  padding: 15px 20px;
-  background-color: #fff;
+.setting-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* 表单控件 */
-select, input[type="number"] {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-.setting-hint {
-  margin-top: 8px;
-  font-size: 12px;
+.setting-value .summary-text {
+  font-size: 14px;
   color: #999;
-  margin-bottom: 0;
 }
 
-.button-link {
-  background: none;
-  border: none;
-  color: #00a2ae;
-  cursor: pointer;
+/* 右侧箭头图标 */
+.chevron {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+  font-size: 12px;
+}
+
+.chevron::after {
+  content: '>';
+  transform: rotate(90deg);
   font-size: 16px;
-  text-decoration: underline;
 }
 
-/* 开关样式 */
+/* 开关样式 - 安卓风格 */
 .switch {
   position: relative;
   display: inline-block;
-  width: 60px;
-  height: 34px;
+  width: 50px;
+  height: 24px;
 }
 
 .switch input {
@@ -707,202 +876,333 @@ select, input[type="number"] {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
+  transition: .2s;
+  border-radius: 24px;
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
   background-color: white;
-  transition: .4s;
+  transition: .2s;
   border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 input:checked + .slider {
-  background-color: #00a2ae;
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #00a2ae;
+  background-color: #4CAF50;
 }
 
 input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-/* 设置操作 */
-.setting-actions {
+/* 抽屉组件样式 - 安卓风格底部弹出 */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 15px 20px;
+  align-items: flex-end;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
 }
 
-.action-button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  background-color: #00a2ae;
-  color: white;
-}
-
-.action-button.danger {
-  background-color: #f44336;
-}
-
-/* 关于信息 */
-.about-info {
-  padding: 15px 0;
-}
-
-.about-info p {
-  margin: 5px 0;
-  color: #666;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .settings-view {
-    padding: 10px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
+.drawer {
+  background-color: #fff;
+  width: 100%;
+  max-height: calc(80vh);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  /* 调整抽屉位置，使其不被底部导航栏遮挡 */
+  transform: translateY(0);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drawer-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.drawer-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.drawer-close:hover {
+  background-color: #f0f0f0;
+}
+
+.drawer-content {
+  padding: 20px;
+  padding-bottom: 80px; /* 添加足够的底部内边距，确保内容不被底部导航栏遮挡 */
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* 选项列表样式 - 安卓风格 */
+.option-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-item {
+  padding: 16px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.option-item:last-child {
+  border-bottom: none;
+}
+
+.option-item.selected {
+  color: #4CAF50;
+}
+
+.check-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #4CAF50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-icon::after {
+  content: '✓';
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* 输入区域样式 */
+.input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-section label {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.drawer-input,
+.drawer-select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 100%;
+}
+
+.drawer-input:focus,
+.drawer-select:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.input-hint {
+  font-size: 14px;
+  color: #999;
+  margin: 0;
+}
+
+/* 抽屉操作按钮 */
+.drawer-action-btn {
+  padding: 12px 24px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 16px;
+  align-self: flex-end;
+}
+
+.drawer-action-btn:hover {
+  background-color: #45a049;
+}
+
+.drawer-action-btn.danger {
+  background-color: #f44336;
+}
+
+.drawer-action-btn.danger:hover {
+  background-color: #d32f2f;
+}
+
+/* 课程时间配置 */
 .section-times-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  gap: 16px;
 }
 
 .section-time-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 0;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .section-label {
-  width: 60px;
-  font-size: 14px;
+  min-width: 80px;
+  font-weight: 500;
+  color: #333;
 }
 
 .time-input {
-  padding: 4px 8px;
+  width: 100px !important;
+  padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 14px;
-  width: 80px;
 }
 
 .time-separator {
-  font-size: 14px;
+  margin: 0 5px;
   color: #666;
 }
 
-/* 学期设置样式 */
+/* 学期设置 */
 .semester-settings {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 16px;
 }
 
 .semester-setting-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
 }
 
 .semester-setting-item label {
-  font-size: 14px;
-  color: #666;
+  font-weight: 500;
+  color: #333;
 }
 
-.semester-setting-item input[type="text"],
-.semester-setting-item input[type="date"],
-.semester-setting-item input[type="number"] {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+/* 节假日课程调整 */
+.holiday-adjustment-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-/* 节假日课程调整样式 */
 .holiday-adjustment-form {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
 }
 
 .form-row {
   display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
 }
 
 .form-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  flex: 1;
-  min-width: 150px;
+  gap: 8px;
 }
 
 .form-item.full-width {
-  flex: 100%;
+  flex: 1 1 100%;
 }
 
 .form-item label {
-  font-size: 14px;
-  color: #666;
-}
-
-.form-item input[type="number"],
-.form-item input[type="text"],
-.form-item select {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  font-weight: 500;
+  color: #333;
   font-size: 14px;
 }
 
+/* 调整记录列表 */
 .adjustment-list {
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .adjustment-list h4 {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   font-size: 16px;
   color: #333;
 }
 
 .adjustment-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 12px;
-  margin-bottom: 10px;
   background-color: #f9f9f9;
   border-radius: 4px;
-  border: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .adjustment-info {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 1;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .adjustment-period {
@@ -911,20 +1211,19 @@ input:checked + .slider:before {
 }
 
 .adjustment-arrow {
-  color: #999;
-  font-size: 16px;
+  font-size: 18px;
+  color: #666;
 }
 
 .adjustment-reason {
-  margin-left: 20px;
   color: #666;
   font-size: 14px;
-  flex: 1;
 }
 
 .delete-btn {
+  align-self: flex-start;
   padding: 6px 12px;
-  background-color: #ff4d4f;
+  background-color: #f44336;
   color: white;
   border: none;
   border-radius: 4px;
@@ -933,6 +1232,47 @@ input:checked + .slider:before {
 }
 
 .delete-btn:hover {
-  background-color: #ff7875;
+  background-color: #d32f2f;
+}
+
+/* 数据管理 */
+.data-manager-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.data-manager-section .drawer-action-btn {
+  align-self: stretch;
+}
+
+/* 关于信息 */
+.about-section {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.about-info {
+  color: #666;
+}
+
+.about-info p {
+  margin: 8px 0;
+}
+
+/* 响应式设计 - 适配小屏幕设备 */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .setting-item {
+    padding: 14px 16px;
+  }
+  
+  .drawer-content {
+    padding: 16px;
+  }
 }
 </style>

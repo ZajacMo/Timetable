@@ -276,8 +276,15 @@ export default defineComponent({
         assignmentForm.id = newAssignment.id;
         assignmentForm.courseId = newAssignment.courseId;
         assignmentForm.content = newAssignment.content;
-        assignmentForm.deadline = new Date(newAssignment.deadline);
+        assignmentForm.deadline = newAssignment.deadline ? new Date(newAssignment.deadline) : setDefaultDeadline();
         assignmentForm.status = newAssignment.status;
+        assignmentForm.attachments = newAssignment.attachments || [];
+        // 恢复文件列表
+        fileList.value = assignmentForm.attachments.map(attach => ({
+          name: attach.name,
+          url: attach.url,
+          status: 'success'
+        }));
       }
     }, { deep: true });
 
@@ -291,7 +298,14 @@ export default defineComponent({
     // 处理提交
     const handleSubmit = async () => {
       try {
-        await assignmentFormRef.value?.validate();
+        // 确保表单引用存在
+        if (!assignmentFormRef.value) {
+          console.error('表单引用不存在');
+          return;
+        }
+        
+        // 执行表单验证
+        await assignmentFormRef.value.validate();
         
         // 处理创建新课程的情况
         let courseId = assignmentForm.courseId;
@@ -300,12 +314,37 @@ export default defineComponent({
           courseId = newCourseName.value;
         }
         
-        // 处理附件
-        const attachments = fileList.value.map(file => ({
-          name: file.name,
-          url: file.url || `data:${file.raw.type};base64,${btoa(String.fromCharCode(...new Uint8Array(file.raw)))}`,
-          type: file.raw.type
-        }));
+        // 安全地处理附件，避免raw属性不存在的问题
+        const attachments = fileList.value.map(file => {
+          // 如果是已存在的附件（通过URL加载的），直接使用现有信息
+          if (file.url) {
+            return {
+              name: file.name,
+              url: file.url,
+              type: file.type || 'application/octet-stream'
+            };
+          }
+          // 对于新上传的文件，尝试处理文件数据
+          try {
+            if (file.raw) {
+                // 直接返回文件的基础信息
+                return {
+                  name: file.name,
+                  url: '',
+                  type: file.raw.type
+                };
+              }
+          } catch (err) {
+            console.error('处理文件时出错:', err);
+          }
+          
+          // 如果处理失败，返回基本信息
+          return {
+            name: file.name,
+            url: '',
+            type: 'application/octet-stream'
+          };
+        });
         
         // 准备提交的数据
         const assignmentData: any = {
@@ -316,11 +355,14 @@ export default defineComponent({
           status: assignmentForm.status,
           attachments: attachments
         };
-        // console.log('提交数据:', assignmentData);
+        
+        console.log('提交数据:', assignmentData);
         emit('submit', assignmentData);
         emit('update:modelValue', false);
       } catch (error) {
         console.error('表单验证失败:', error);
+        // 可以添加用户可见的错误提示
+        alert('表单验证失败，请检查输入内容');
       }
     };
 

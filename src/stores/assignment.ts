@@ -1,5 +1,5 @@
-import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 import type { Assignment } from '@/core/types'
 import { CourseDataProcessor } from '@/core/courseDataProcessor'
 import { useCoursesStore } from './courses'
@@ -62,7 +62,7 @@ export const useAssignmentStore = defineStore('assignment', () => {
   
   // 更新作业
   const updateAssignment = async (id: string, updatedData: Partial<Assignment>): Promise<Assignment | null> => {
-    const index = assignments.value.findIndex(assignment => assignment.id === id)
+    const index = assignments.value.findIndex((assignment: Assignment) => assignment.id === id)
     if (index === -1) {
       return null
     }
@@ -84,7 +84,7 @@ export const useAssignmentStore = defineStore('assignment', () => {
   // 删除作业
   const deleteAssignment = async (id: string): Promise<boolean> => {
     const initialLength = assignments.value.length
-    assignments.value = assignments.value.filter(assignment => assignment.id !== id)
+    assignments.value = assignments.value.filter((assignment: Assignment) => assignment.id !== id)
     
     if (assignments.value.length < initialLength) {
       saveAssignments()
@@ -103,7 +103,7 @@ export const useAssignmentStore = defineStore('assignment', () => {
   // 根据课程ID删除所有作业
   const deleteAssignmentsByCourseId = async (courseId: string): Promise<boolean> => {
     const initialLength = assignments.value.length
-    assignments.value = assignments.value.filter(assignment => assignment.courseId !== courseId)
+    assignments.value = assignments.value.filter((assignment: Assignment) => assignment.courseId !== courseId)
     
     if (assignments.value.length < initialLength) {
       saveAssignments()
@@ -121,7 +121,7 @@ export const useAssignmentStore = defineStore('assignment', () => {
   // 获取指定课程的作业
   const getAssignmentsByCourseId = computed(() => {
     return (courseId: string): Assignment[] => {
-      return assignments.value.filter(assignment => assignment.courseId === courseId)
+      return assignments.value.filter((assignment: Assignment) => assignment.courseId === courseId)
     }
   })
   

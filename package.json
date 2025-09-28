@@ -12,6 +12,7 @@
     "cordova-run-android": "npm run build && cordova run android"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
     "date-fns": "^4.1.0",
     "element-plus": "^2.11.4",
     "pinia": "^2.1.7",

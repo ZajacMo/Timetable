@@ -71,7 +71,7 @@
       :course-id="course.id.toString()"
       :course-name="course.name"
       @close="showAssignmentDialog = false"
-      @submit="handleAssignmentSubmitNew"
+      @submit="handleAssignmentSubmit"
     />
     
     <!-- 作业列表 -->
@@ -82,21 +82,32 @@
         </div>
       </template>
       <div class="assignments-list">
-        <div v-for="assignment in courseAssignments" :key="assignment.id" class="assignment-item">
-          <div class="assignment-content">{{ assignment.content }}</div>
-          <div class="assignment-meta">
-            <span class="assignment-deadline">
-              截止日期：{{ formatAssignmentDeadline(assignment.deadline) }}
-            </span>
-            <el-tag :type="getStatusType(assignment.status)">
-              {{ getStatusText(assignment.status) }}
-            </el-tag>
-          </div>
+        <div v-for="assignment in courseAssignments" :key="assignment.id" class="assignment-item" @click="showAssignmentDetail(assignment)">
+        <div class="assignment-content">{{ assignment.content }}</div>
+        <div class="assignment-meta">
+          <span class="assignment-deadline">
+            截止日期：{{ formatAssignmentDeadline(assignment.deadline) }}
+          </span>
+          <el-tag :type="getStatusType(assignment.status)">
+            {{ getStatusText(assignment.status) }}
+          </el-tag>
         </div>
+      </div>
       </div>
     </el-card>
     
     <el-empty v-else-if="course" description="暂无作业信息" />
+    
+    <!-- 作业详情对话框 -->
+    <AssignmentDetailDialog
+      v-model="isDetailDialogVisible"
+      :assignment="currentDetailAssignment"
+      :courses="course ? [course] : []"
+      @close="closeDetailDialog"
+      @submit="handleAssignmentMarkSubmitted"
+      @edit="handleEditAssignment"
+      @delete="handleAssignmentDelete"
+    />
   </div>
 </template>
 
@@ -105,6 +116,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import processedCourses from '@/../processedCourses.json'
 import AssignmentDialog from '@/components/AssignmentDialog.vue'
+import AssignmentDetailDialog from '@/components/AssignmentDetailDialog.vue'
 import { useScheduleStore } from '@/stores/schedule'
 import { useAssignmentStore } from '@/stores/assignment'
 import { CourseDataProcessor } from '@/core/courseDataProcessor'
@@ -144,6 +156,9 @@ const allSchedules = ref<CourseSchedule[]>([])
   const showAssignmentDialog = ref(false)
   const assignmentDialogMode = ref<'add' | 'edit'>('add')
   const selectedAssignment = ref<any>(null)
+  // 作业详情对话框相关状态
+  const isDetailDialogVisible = ref(false)
+  const currentDetailAssignment = ref<any>(null)
 const assignmentDialogRef = ref<InstanceType<typeof AssignmentDialog>>()
 
 // 课程相关状态和方法
@@ -160,6 +175,7 @@ const courseAssignments = ref<any[]>([])
   const handleAssignmentSubmitNew = async (assignmentData: any) => {
     try {
       // 添加作业到assignment store
+      console.log('提交新作业数据:', assignmentData);
       await assignmentStore.addAssignment({
         ...assignmentData,
         courseId: course.value?.id.toString(),
@@ -296,11 +312,99 @@ const openAddAssignmentDialog = () => {
   assignmentDialogMode.value = 'add'
   selectedAssignment.value = null
   showAssignmentDialog.value = true
-  console.log('openAddAssignmentDialog', assignmentDialogRef.value)
+  // console.log('openAddAssignmentDialog', assignmentDialogRef.value)
+  // 如果ref已经绑定，可以直接调用show方法确保显示
+  if (assignmentDialogRef.value) {
+    assignmentDialogRef.value.show()
+  }
+}
+
+// 显示作业详情
+const showAssignmentDetail = (assignment: any) => {
+  currentDetailAssignment.value = assignment
+  isDetailDialogVisible.value = true
+}
+
+// 关闭详情对话框
+const closeDetailDialog = () => {
+  isDetailDialogVisible.value = false
+  currentDetailAssignment.value = null
+}
+
+// 处理 AssignmentDialog 提交事件
+const handleAssignmentSubmit = async (assignmentData: any) => {
+  try {
+    if (assignmentDialogMode.value === 'edit') {
+      await handleAssignmentUpdate(assignmentData)
+    } else {
+      await handleAssignmentSubmitNew(assignmentData)
+    }
+  } catch (error) {
+    console.error('处理作业提交失败:', error)
+  }
+}
+
+// 处理作业标记为已提交
+const handleAssignmentMarkSubmitted = async (assignmentId: string) => {
+  try {
+    await assignmentStore.updateAssignment(assignmentId, {
+      status: 'submitted'
+    })
+    
+    ElMessage.success('作业状态已更新！')
+    closeDetailDialog()
+    loadCourseAssignments() // 刷新作业列表
+  } catch (error) {
+    console.error('更新作业状态失败:', error)
+    ElMessage.error('操作失败，请重试')
+  }
+}
+
+// 处理编辑作业
+const handleEditAssignment = (assignment: any) => {
+  // 关闭详情对话框
+  closeDetailDialog()
+  
+  // 打开编辑对话框
+  assignmentDialogMode.value = 'edit'
+  selectedAssignment.value = { ...assignment }
+  showAssignmentDialog.value = true
   
   // 如果ref已经绑定，可以直接调用show方法确保显示
   if (assignmentDialogRef.value) {
     assignmentDialogRef.value.show()
+  }
+}
+
+// 处理删除作业
+const handleAssignmentDelete = async (assignmentId: string) => {
+  try {
+    await assignmentStore.deleteAssignment(assignmentId)
+    ElMessage.success('作业已成功删除！')
+    closeDetailDialog()
+    loadCourseAssignments() // 刷新作业列表
+  } catch (error) {
+    console.error('删除作业失败:', error)
+    ElMessage.error('删除作业失败，请重试')
+  }
+}
+
+// 处理更新作业
+const handleAssignmentUpdate = async (assignmentData: any) => {
+  try {
+    // 使用updateAssignment而不是addAssignment来更新现有作业
+    console.log('更新作业数据:', assignmentData);
+    await assignmentStore.updateAssignment(assignmentData.id, {
+      ...assignmentData,
+      courseId: course.value?.id.toString()
+    })
+    
+    ElMessage.success('作业已成功更新！')
+    showAssignmentDialog.value = false
+    loadCourseAssignments() // 刷新作业列表
+  } catch (error) {
+    console.error('更新作业失败:', error)
+    ElMessage.error('更新作业失败，请重试')
   }
 }
 
@@ -435,6 +539,14 @@ const openAddAssignmentDialog = () => {
   background-color: #f8f9fa;
   border-radius: 8px;
   border-left: 4px solid #00a2ae;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.assignment-item:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .assignment-content {

@@ -316,7 +316,7 @@ export default defineComponent({
           status: assignmentForm.status,
           attachments: attachments
         };
-        
+        // console.log('提交数据:', assignmentData);
         emit('submit', assignmentData);
         emit('update:modelValue', false);
       } catch (error) {

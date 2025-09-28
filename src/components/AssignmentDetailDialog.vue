@@ -2,7 +2,7 @@
   <el-dialog 
     v-model="dialogVisible" 
     title="作业详情" 
-    width="600px"
+    :width="dialogWidth"
     @close="handleClose"
   >
     <div v-if="assignment" class="assignment-detail">
@@ -30,13 +30,34 @@
         </el-tag>
       </div>
       
-      <div class="detail-row">
-        <span class="detail-label">创建时间：</span>
-        <span class="detail-value">{{ formatCreateTime(assignment) }}</span>
-      </div>
-      
       <div v-if="isOverdue" class="overdue-notice">
         <i class="el-icon-warning"></i> 该作业已逾期，请尽快提交！
+      </div>
+      
+      <!-- 附件显示区域 -->
+      <div v-if="assignment && assignment.attachments && assignment.attachments.length > 0" class="attachments-container">
+        <div class="detail-row">
+          <span class="detail-label">附件：</span>
+          <div class="attachments-list">
+            <div v-for="(attachment, index) in assignment.attachments" :key="index" class="attachment-item">
+              <!-- 图片类型直接预览 -->
+              <div v-if="isImageType(attachment.type)" class="image-attachment">
+                <el-image :src="attachment.url" :preview-src-list="[attachment.url]" style="width: 100px; height: 100px;" />
+                <div class="attachment-name">{{ attachment.name }}</div>
+              </div>
+              <!-- 其他类型显示图标和名称 -->
+              <div v-else class="file-attachment">
+                <el-icon size="24"><Document /></el-icon>
+                <div class="attachment-info">
+                  <div class="attachment-name">{{ attachment.name }}</div>
+                  <div class="attachment-type">{{ getFileTypeText(attachment.type) }}</div>
+                  <div class="attachment-size">{{ formatFileSize(attachment.url) }}</div>
+                </div>
+                <el-button type="text" size="small" @click="downloadAttachment(attachment)">下载</el-button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -46,9 +67,11 @@
     
     <template #footer>
       <span class="dialog-footer">
-        <el-button v-if="assignment && assignment.status === 'pending'" type="primary" @click="handleSubmit">
-          标记为已提交
+        <el-button type="primary" @click="handleEdit">编辑</el-button>
+        <el-button v-if="assignment && assignment.status === 'pending'" type="success" @click="handleSubmit">
+          已提交
         </el-button>
+        <el-button type="danger" @click="handleDelete">删除</el-button>
         <el-button @click="handleClose">关闭</el-button>
       </span>
     </template>
@@ -57,27 +80,35 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue';
+import { ElMessageBox } from 'element-plus';
 import type { Assignment } from '../core/types';
 import { CourseDataProcessor } from '../core/courseDataProcessor';
-import type { Course } from '../types/course';
+import { Document } from '@element-plus/icons-vue';
+
+// 简化的课程类型定义，用于详情展示
+export interface SimpleCourse {
+  id: string | number;
+  name: string;
+  [key: string]: any;
+}
 
 export default defineComponent({
   name: 'AssignmentDetailDialog',
   props: {
-    visible: {
-      type: Boolean,
-      default: false
+      visible: {
+        type: Boolean,
+        default: false
+      },
+      assignment: {
+        type: Object as () => Assignment | null,
+        default: null
+      },
+      courses: {
+        type: Array as () => SimpleCourse[],
+        default: () => []
+      }
     },
-    assignment: {
-      type: Object as () => Assignment | null,
-      default: null
-    },
-    courses: {
-      type: Array as () => Course[],
-      default: () => []
-    }
-  },
-  emits: ['close', 'submit'],
+  emits: ['close', 'submit', 'edit', 'delete'],
   setup(props, { emit }) {
     const dialogVisible = computed({
       get: () => props.visible,
@@ -112,34 +143,6 @@ export default defineComponent({
       return typeMap[status];
     };
 
-    // 格式化创建时间（根据ID估算）
-    const formatCreateTime = (assignment: Assignment): string => {
-      // 简单地从ID中提取时间戳（假设ID格式与courseDataProcessor中的createAssignment方法一致）
-      const idParts = assignment.id.split('');
-      let timestampStr = '';
-      
-      // 尝试从ID中提取可能的时间戳部分
-      for (let i = 0; i < idParts.length; i++) {
-        if (!isNaN(parseInt(idParts[i], 36))) {
-          timestampStr += idParts[i];
-        } else {
-          break;
-        }
-      }
-      
-      try {
-        if (timestampStr) {
-          const timestamp = parseInt(timestampStr, 36);
-          const date = new Date(timestamp);
-          return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-        }
-      } catch (error) {
-        console.error('Failed to parse assignment creation time:', error);
-      }
-      
-      return '未知';
-    };
-
     // 处理关闭对话框
     const handleClose = () => {
       emit('close');
@@ -152,16 +155,113 @@ export default defineComponent({
       }
     };
 
-    return {
-      dialogVisible,
-      isOverdue,
-      getCourseName,
-      getStatusType,
-      formatCreateTime,
-      handleClose,
-      handleSubmit,
-      CourseDataProcessor
+    // 处理编辑作业
+    const handleEdit = () => {
+      if (props.assignment) {
+        emit('edit', props.assignment);
+      }
     };
+
+    // 判断是否为图片类型
+    const isImageType = (type: string) => {
+      return type && type.startsWith('image/');
+    };
+
+    // 获取文件类型文本描述
+    const getFileTypeText = (type: string) => {
+      if (!type) return '未知类型';
+      
+      const typeMap: Record<string, string> = {
+        'application/pdf': 'PDF文档',
+        'application/msword': 'Word文档',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word文档',
+        'application/vnd.ms-excel': 'Excel表格',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel表格',
+        'application/vnd.ms-powerpoint': 'PowerPoint演示',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint演示',
+        'application/zip': 'ZIP压缩文件',
+        'application/x-rar-compressed': 'RAR压缩文件',
+        'text/plain': '文本文件',
+        'application/json': 'JSON文件',
+        'application/javascript': 'JavaScript文件',
+        'text/html': 'HTML文件'
+      };
+      
+      return typeMap[type] || type;
+    };
+
+    // 格式化文件大小
+    const formatFileSize = (url: string) => {
+      // 对于data URL，尝试解析base64数据获取大小
+      if (url && url.startsWith('data:')) {
+        // 提取base64部分
+        const base64Part = url.split(',')[1];
+        if (base64Part) {
+          const bytes = base64Part.length * 0.75;
+          if (bytes < 1024) return `${bytes.toFixed(0)} B`;
+          if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+          return `${(bytes / 1048576).toFixed(1)} MB`;
+        }
+      }
+      return '未知大小';
+    };
+
+    // 下载附件
+    const downloadAttachment = (attachment: { name: string; url: string }) => {
+      if (attachment.url.startsWith('data:')) {
+        // 对于data URL，创建下载链接
+        const link = document.createElement('a');
+        link.href = attachment.url;
+        link.download = attachment.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // 对于普通URL，可以直接打开或实现其他下载逻辑
+        window.open(attachment.url, '_blank');
+      }
+    };
+
+    // 处理删除作业
+    const handleDelete = () => {
+      if (props.assignment) {
+        ElMessageBox.confirm('确定要删除此作业吗？删除后无法恢复。', '确认删除', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          emit('delete', props.assignment!.id);
+        }).catch(() => {
+          // 用户取消删除
+        });
+      }
+    };
+
+    // 计算对话框宽度，适应不同屏幕尺寸
+    const dialogWidth = computed(() => {
+      const screenWidth = window.innerWidth;
+      if (screenWidth < 480) return '95%';
+      if (screenWidth < 768) return '90%';
+      return '600px';
+    });
+
+    return {
+        dialogVisible,
+        dialogWidth,
+        isOverdue,
+        getCourseName,
+        getStatusType,
+        handleClose,
+        handleSubmit,
+        handleEdit,
+        handleDelete,
+        CourseDataProcessor,
+        Document,
+        isImageType,
+        getFileTypeText,
+        formatFileSize,
+        downloadAttachment
+      };
   }
 });
 </script>
@@ -194,6 +294,34 @@ export default defineComponent({
   line-height: 1.6;
   max-width: 400px;
   word-break: break-word;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .el-dialog {
+    width: 90% !important;
+    margin: 20px auto;
+  }
+  
+  .detail-label {
+    display: block;
+    width: auto;
+    margin-bottom: 5px;
+  }
+  
+  .detail-content {
+    max-width: 100%;
+  }
+  
+  .dialog-footer {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+  }
+  
+  .dialog-footer .el-button {
+    width: 100%;
+  }
 }
 
 .deadline-pending {

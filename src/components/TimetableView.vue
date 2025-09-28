@@ -84,7 +84,7 @@ import { computed, onMounted, ref } from 'vue'
 import CourseCell from './CourseCell.vue'
 import processedCourses from '../../processedCourses.json'
 import { useSettingsStore } from '@/stores/settings'
-import type { HolidayCourseAdjustment } from '@/stores/settings'
+import { CourseDataProcessor } from '@/core/courseDataProcessor'
 
 // 初始化设置store
 const settingsStore = useSettingsStore()
@@ -155,41 +155,11 @@ const daysWithDate = computed(() => {
   })
 })
 
+// 复用CourseDataProcessor中的解析课程时间方法
 // 解析课程时间，转换为开始和结束节次
-const parseCourseTime = (jc: string) => {
-  const match = jc.match(/(\d+)-(\d+)节/)
-  if (match) {
-    return {
-      startSection: parseInt(match[1]),
-      endSection: parseInt(match[2])
-    }
-  }
-  return { startSection: 1, endSection: 1 }
-}
 
+// 复用CourseDataProcessor中的检查课程是否在当前周次方法
 // 检查课程是否在当前周次
-const isCourseInCurrentWeek = (zcd: string) => {
-  // 简单实现，实际应该解析各种周次格式
-  if (zcd.includes('全周') || zcd.includes('1-18周')) {
-    return true
-  }
-  
-  // 检查当前周是否在范围中
-  const currentWeek = currentWeekDisplay.value
-  const weekRangeMatch = zcd.match(/(\d+)-(\d+)周/)
-  if (weekRangeMatch) {
-    const startWeek = parseInt(weekRangeMatch[1])
-    const endWeek = parseInt(weekRangeMatch[2])
-    return currentWeek >= startWeek && currentWeek <= endWeek
-  }
-  
-  // 检查当前周是否为单周
-  if (zcd.includes(`${currentWeek}周`)) {
-    return true
-  }
-  
-  return false
-}
 
 // 格式化课程数据，转换为表格需要的格式
 const tableData = computed(() => {
@@ -335,122 +305,31 @@ const getSpanMethod = ({ row, column, columnIndex }: any) => {
   return { rowspan: 1, colspan: 1 }
 }
 
+// 复用CourseDataProcessor中的生成课程颜色方法
 // 为不同课程生成不同颜色的函数
-const generateCourseColor = (courseName: string, teacher: string) => {
-  // 使用课程名称和教师姓名生成一个伪随机数
-  let hash = 0;
-  const str = courseName + teacher;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // 转换为32位整数
-  }
-  
-  // 预定义的课程颜色列表
-  const colors = [
-    '#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399',
-    '#722ED1', '#13C2C2', '#FAAD14', '#F7BA1E', '#EB2F96'
-  ];
-  
-  // 根据哈希值选择颜色
-  const colorIndex = Math.abs(hash) % colors.length;
-  return colors[colorIndex];
-}
 
+// 复用CourseDataProcessor中的应用节假日课程调整方法
 // 应用节假日课程调整
-const applyHolidayAdjustments = (courses: any[]) => {
-  const adjustedCourses: any[] = [...courses]
-  const currentWeek = currentWeekDisplay.value
-  const adjustments = settingsStore.settings.holidayCourseAdjustments
-  
-  // 检查是否有需要从其他周调整过来的课程
-  adjustments.forEach((adjustment: HolidayCourseAdjustment) => {
-    // 如果目标周次是当前周，需要将原周次的课程复制到当前周
-    if (adjustment.targetWeek === currentWeek) {
-      // 遍历所有课程，找到符合条件的课程
-      processedCourses.courses.forEach((course: any) => {
-        course.courseSchedules.forEach((schedule: any) => {
-          // 检查课程是否在原始周次
-          if (isCourseInOriginalWeek(schedule.zcd, adjustment.originalWeek)) {
-            // 检查课程是否在原始星期几
-            if (parseInt(schedule.xqj) === adjustment.originalDay) {
-              // 解析课程时间
-              const { startSection, endSection } = parseCourseTime(schedule.jc)
-              
-              // 为课程生成颜色
-              const color = generateCourseColor(course.kcmc, course.xm)
-              
-              // 创建调整后的课程对象
-              adjustedCourses.push({
-                id: `${course.kch}-adjusted-${adjustment.id}`, // 使用不同的ID避免冲突
-                name: course.kcmc, // 课程名称
-                teacher: course.xm, // 教师
-                classroom: schedule.cdmc, // 教室
-                dayOfWeek: adjustment.targetDay, // 使用目标星期几
-                startSection, // 开始节次
-                endSection, // 结束节次
-                color, // 添加颜色属性
-                xqj: adjustment.targetDay.toString(), // 添加星期几的原始值
-                jc: schedule.jc, // 添加节次的原始值
-                isAdjusted: true, // 标记为调整后的课程
-                adjustmentReason: adjustment.reason // 调整原因
-              })
-            }
-          }
-        })
-      })
-    }
-  })
-  
-  // 移除需要调整到其他周的课程
-  return adjustedCourses.filter(course => {
-    // 检查当前课程是否需要调整到其他周
-    const shouldBeRemoved = adjustments.some((adjustment: HolidayCourseAdjustment) => {
-      return adjustment.originalWeek === currentWeek && 
-             adjustment.originalDay === course.dayOfWeek &&
-             !course.isAdjusted // 避免移除已经调整过的课程
-    })
-    return !shouldBeRemoved
-  })
-}
 
+// 复用CourseDataProcessor中的检查课程是否在指定的原始周次方法
 // 检查课程是否在指定的原始周次
-const isCourseInOriginalWeek = (zcd: string, week: number) => {
-  if (zcd.includes('全周') || zcd.includes(`${week}-${settingsStore.settings.semester.weeksCount}周`)) {
-    return true
-  }
-  
-  // 检查是否在范围中
-  const weekRangeMatch = zcd.match(/(\d+)-(\d+)周/)
-  if (weekRangeMatch) {
-    const startWeek = parseInt(weekRangeMatch[1])
-    const endWeek = parseInt(weekRangeMatch[2])
-    return week >= startWeek && week <= endWeek
-  }
-  
-  // 检查是否为指定周
-  if (zcd.includes(`${week}周`)) {
-    return true
-  }
-  
-  return false
-}
 
 // 加载当前周的课程
 const loadCurrentWeekCourses = () => {
   const currentCourses: any[] = []
+  const currentWeek = currentWeekDisplay.value
   
   // 遍历所有课程
   processedCourses.courses.forEach((course: any) => {
     // 遍历课程的所有时间段
     course.courseSchedules.forEach((schedule: any) => {
       // 检查课程是否在当前周次
-      if (isCourseInCurrentWeek(schedule.zcd)) {
+      if (CourseDataProcessor.isCourseInWeek(schedule.zcd, currentWeek)) {
         // 解析课程时间
-        const { startSection, endSection } = parseCourseTime(schedule.jc)
+        const { startSection, endSection } = CourseDataProcessor.parseCourseTime(schedule.jc)
         
         // 为课程生成颜色
-        const color = generateCourseColor(course.kcmc, course.xm)
+        const color = CourseDataProcessor.generateCourseColor(course.kcmc, course.xm)
         
         // 创建适配CourseCell的课程对象
         currentCourses.push({
@@ -463,14 +342,22 @@ const loadCurrentWeekCourses = () => {
           endSection, // 结束节次
           color, // 添加颜色属性
           xqj: schedule.xqj, // 添加星期几的原始值
-          jc: schedule.jc // 添加节次的原始值
+          jc: schedule.jc, // 添加节次的原始值
+          startWeek: parseInt(schedule.zcd.match(/(\d+)-/)?.[1] || '1'), // 从周次字符串中提取开始周
+          endWeek: parseInt(schedule.zcd.match(/-(\d+)/)?.[1] || '18') // 从周次字符串中提取结束周
         })
       }
     })
   })
   
   // 应用节假日课程调整
-  courseData.value = applyHolidayAdjustments(currentCourses)
+  const adjustments = settingsStore.settings.holidayCourseAdjustments || []
+  courseData.value = CourseDataProcessor.applyHolidayAdjustments(
+    currentCourses, 
+    adjustments, 
+    currentWeek, 
+    processedCourses.courses
+  )
 }
 
 // 初始化

@@ -56,6 +56,14 @@ export interface Settings {
 }
 
 // 平台存储接口
+export interface Assignment {
+  id: string;
+  courseId: string;
+  content: string;
+  deadline: Date;
+  status: 'pending' | 'submitted' | 'late';
+}
+
 export interface StorageProvider {
   save<T>(key: string, data: T): Promise<boolean>;
   load<T>(key: string): Promise<T | null>;
@@ -63,7 +71,6 @@ export interface StorageProvider {
   clear(): Promise<boolean>;
 }
 
-// 日期范围接口
 export interface DateRange {
   start: Date;
   end: Date;

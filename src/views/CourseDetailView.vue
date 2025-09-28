@@ -7,7 +7,12 @@
     
     <el-card v-if="course" class="course-info-card">
       <div class="course-name-section">
-        <h3>{{ course.name }}</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3>{{ course.name }}</h3>
+          <el-button type="primary" size="small" @click="openAddAssignmentDialog">
+            添加作业
+          </el-button>
+        </div>
         <div class="course-basic-info">
           <span class="course-teacher">教师：{{ course.teacher || '未设置' }}</span>
           <span class="course-classroom">教室：{{ course.classroom || '未设置' }}</span>
@@ -53,6 +58,19 @@
     <div v-else class="no-course">
       <el-empty description="暂无课程信息"></el-empty>
     </div>
+
+    <!-- 作业对话框 -->
+    <AssignmentDialog
+      v-if="course"
+      ref="assignmentDialogRef"
+      v-model="showAssignmentDialog"
+      :mode="assignmentDialogMode"
+      :assignment="selectedAssignment"
+      :course-id="course.id.toString()"
+      :course-name="course.name"
+      @close="showAssignmentDialog = false"
+      @submit="showAssignmentDialog = false"
+    />
   </div>
 </template>
 
@@ -60,6 +78,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import processedCourses from '../../processedCourses.json'
+import AssignmentDialog from '../components/AssignmentDialog.vue'
 
 // 定义课程接口
 interface Course {
@@ -90,6 +109,12 @@ interface CourseSchedule {
 const route = useRoute()
 const course = ref<Course | null>(null)
 const allSchedules = ref<CourseSchedule[]>([])
+
+// 作业对话框相关状态
+const showAssignmentDialog = ref(false)
+const assignmentDialogMode = ref<'add' | 'edit'>('add')
+const selectedAssignment = ref<any>(null)
+const assignmentDialogRef = ref<InstanceType<typeof AssignmentDialog>>()
 
 // 课程ID从路由参数中获取
 const courseId = route.query.id
@@ -159,6 +184,19 @@ const getCourseSchedule = () => {
 // 获取单个时间段的文本
 const getScheduleText = (schedule: CourseSchedule) => {
   return `${schedule.xqjmc} ${schedule.jc} ${schedule.cdmc} (${schedule.zcd})`
+}
+
+// 打开添加作业对话框
+const openAddAssignmentDialog = () => {
+  assignmentDialogMode.value = 'add'
+  selectedAssignment.value = null
+  showAssignmentDialog.value = true
+  console.log('openAddAssignmentDialog', assignmentDialogRef.value)
+  
+  // 如果ref已经绑定，可以直接调用show方法确保显示
+  if (assignmentDialogRef.value) {
+    assignmentDialogRef.value.show()
+  }
 }
 
 // 组件挂载时获取课程详情

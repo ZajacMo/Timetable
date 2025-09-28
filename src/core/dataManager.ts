@@ -1,10 +1,12 @@
-import { Course, Schedule, Semester, UserSettings, StorageProvider, OverlapType, DateRange } from './types';
+import { Course, Schedule, Semester, UserSettings, OverlapType, DateRange } from './types';
+import type { StorageProvider, Assignment } from './types';
 
 // 核心数据管理器
 export class DataManager {
   private storageProvider: StorageProvider;
   private courses: Course[] = [];
   private schedules: Schedule[] = [];
+  private assignments: Assignment[] = [];
   private semester: Semester | null = null;
   private settings: UserSettings | null = null;
 
@@ -22,6 +24,7 @@ export class DataManager {
   private async loadAllData(): Promise<void> {
     this.courses = (await this.storageProvider.load<Course[]>('courses')) || [];
     this.schedules = (await this.storageProvider.load<Schedule[]>('schedules')) || [];
+    this.assignments = (await this.storageProvider.load<Assignment[]>('assignments')) || [];
     this.semester = await this.storageProvider.load<Semester>('semester');
     this.settings = await this.storageProvider.load<UserSettings>('settings') || this.getDefaultSettings();
     
@@ -141,6 +144,70 @@ export class DataManager {
     await this.storageProvider.save('schedules', this.schedules);
     
     return newSchedule;
+  }
+
+  // 作业管理方法
+  
+  // 获取所有作业
+  public getAssignments(): Assignment[] {
+    return [...this.assignments];
+  }
+
+  // 添加作业
+  public async addAssignment(assignment: Omit<Assignment, 'id'>): Promise<Assignment> {
+    const newAssignment: Assignment = {
+      ...assignment,
+      id: this.generateId()
+    };
+    
+    this.assignments.push(newAssignment);
+    await this.storageProvider.save('assignments', this.assignments);
+    
+    return newAssignment;
+  }
+
+  // 更新作业
+  public async updateAssignment(id: string, updatedAssignment: Partial<Assignment>): Promise<Assignment | null> {
+    const index = this.assignments.findIndex(assignment => assignment.id === id);
+    if (index === -1) {
+      return null;
+    }
+    
+    this.assignments[index] = { ...this.assignments[index], ...updatedAssignment };
+    await this.storageProvider.save('assignments', this.assignments);
+    
+    return this.assignments[index];
+  }
+
+  // 删除作业
+  public async deleteAssignment(id: string): Promise<boolean> {
+    const initialLength = this.assignments.length;
+    this.assignments = this.assignments.filter(assignment => assignment.id !== id);
+    
+    if (this.assignments.length === initialLength) {
+      return false;
+    }
+    
+    await this.storageProvider.save('assignments', this.assignments);
+    return true;
+  }
+
+  // 根据课程ID获取作业
+  public getAssignmentsByCourseId(courseId: string): Assignment[] {
+    return this.assignments.filter(assignment => assignment.courseId === courseId);
+  }
+
+  // 获取即将截止的作业（7天内）
+  public getUpcomingAssignments(days: number = 7): Assignment[] {
+    const now = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(now.getDate() + days);
+    
+    return this.assignments.filter(assignment => 
+      assignment.status === 'pending' &&
+      assignment.deadline >= now &&
+      assignment.deadline <= futureDate
+    );
   }
 
   // 更新日程
@@ -369,6 +436,7 @@ export class DataManager {
     await this.storageProvider.clear();
     this.courses = [];
     this.schedules = [];
+    this.assignments = [];
     this.semester = null;
     this.settings = this.getDefaultSettings();
   }

@@ -19,9 +19,8 @@
       <!-- 日期标题行 -->
       <div class="date-headers-row">
         <div class="time-labels-header"></div>
-        <div v-for="(dateInfo, index) in threeDays" :key="index" class="day-date-header">
+        <div v-for="(dateInfo, index) in threeDays" :key="index" class="day-date-header" :class="{ 'today-date': dateInfo.isToday }">
           <h3>{{ formatDate(dateInfo.date) }}</h3>
-          <span class="day-badge" v-if="dateInfo.isToday">今天</span>
         </div>
       </div>
       
@@ -104,6 +103,7 @@ import { useCoursesStore } from '@/stores/courses'
 import ScheduleDialog from '@/components/ScheduleDialog.vue'
 import { Schedule } from '@/types/schedule'
 import type { Course } from '@/types/course'
+import { CourseDataProcessor } from '@/core/courseDataProcessor'
 
 const scheduleStore = useScheduleStore()
 const coursesStore = useCoursesStore()
@@ -168,15 +168,15 @@ const getSchedulesForDate = (date: Date): Schedule[] => {
 
 // 获取特定日期的课程
 const getCoursesForDate = (date: Date): Course[] => {
-  const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay() // 将周日(0)转换为7
   const weekNumber = getWeekNumber(date) // 计算当前日期的周数
   
-  // 使用coursesStore的getCoursesForDate方法获取当天课程
-  return coursesStore.getCoursesForDate(date, weekNumber)
+  // 使用CourseDataProcessor的getCoursesForDate方法获取当天课程
+  return CourseDataProcessor.getCoursesForDate(coursesStore.courses, date, weekNumber)
 }
 
 // 计算指定日期的周数（相对于当前学期开始）
-const getWeekNumber = (date: Date): number => {
+const getWeekNumber = (_date: Date): number => {
+
   // 这里简单返回第1周，实际应用中应该根据学期开始日期计算
   // 由于我们使用的是模拟数据，所有课程都从第1周开始
   return 1
@@ -184,54 +184,14 @@ const getWeekNumber = (date: Date): number => {
 
 // 获取课程开始时间
 const getCourseStartTime = (course: Course): Date => {
-  const time = new Date()
-  time.setHours(0, 0, 0, 0)
-  
-  // 假设课程节次与时间的对应关系
-  const sectionToTime: { [key: number]: number } = {
-    1: 8,    // 第1节 8:00
-    2: 9,    // 第2节 9:00
-    3: 10,   // 第3节 10:00
-    4: 11,   // 第4节 11:00
-    5: 13,   // 第5节 13:00
-    6: 14,   // 第6节 14:00
-    7: 15,   // 第7节 15:00
-    8: 16,   // 第8节 16:00
-    9: 18,   // 第9节 18:00
-    10: 19,  // 第10节 19:00
-    11: 20   // 第11节 20:00
-  }
-  
-  const startHour = sectionToTime[course.startSection || 1] || 8
-  time.setHours(startHour, 0, 0, 0)
-  
-  return time
+  // 使用CourseDataProcessor的getCourseStartTime方法
+  return CourseDataProcessor.getCourseStartTime(course)
 }
 
 // 获取课程结束时间
 const getCourseEndTime = (course: Course): Date => {
-  const time = new Date()
-  time.setHours(0, 0, 0, 0)
-  
-  // 假设课程节次与时间的对应关系
-  const sectionToTime: { [key: number]: number } = {
-    1: 9,    // 第1节结束 9:00
-    2: 10,   // 第2节结束 10:00
-    3: 11,   // 第3节结束 11:00
-    4: 12,   // 第4节结束 12:00
-    5: 14,   // 第5节结束 14:00
-    6: 15,   // 第6节结束 15:00
-    7: 16,   // 第7节结束 16:00
-    8: 17,   // 第8节结束 17:00
-    9: 19,   // 第9节结束 19:00
-    10: 20,  // 第10节结束 20:00
-    11: 21   // 第11节结束 21:00
-  }
-  
-  const endHour = sectionToTime[course.endSection || 1] || 9
-  time.setHours(endHour, 0, 0, 0)
-  
-  return time
+  // 使用CourseDataProcessor的getCourseEndTime方法
+  return CourseDataProcessor.getCourseEndTime(course)
 }
 
 // 计算时间在时间轴上的位置百分比
@@ -327,7 +287,9 @@ const cancelAddSchedule = () => {
 .day-date-header {
   flex: 1;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
+  text-align: center;
   align-items: center;
   padding: 15px 20px;
   background-color: #f7f7f7;
@@ -341,13 +303,18 @@ const cancelAddSchedule = () => {
 .day-date-header h3 {
   margin: 0;
   font-size: 16px;
-  color: #333;
+  color: #999; /* 默认灰色 */
+}
+
+.day-date-header.today-date h3 {
+  color: #000; /* 今天用黑色 */
+  font-weight: bold;
 }
 
 /* 共享时间轴容器 */
 .shared-timeline-container {
   display: flex;
-  height: 600px;
+  /* height: 600px; */
   position: relative;
 }
 
@@ -500,7 +467,7 @@ const cancelAddSchedule = () => {
   }
   
   .shared-timeline-container {
-    height: 400px;
+    min-height: 600px;
   }
 }
 

@@ -33,6 +33,18 @@ export interface Course {
   
   // 课程颜色
   color: string
+  
+  // 星期几的原始值（可选，用于节假日调整）
+  xqj?: string
+  
+  // 是否为调整后的课程（可选，用于节假日调整）
+  isAdjusted?: boolean
+  
+  // 节次的原始值（可选，用于节假日调整）
+  jc?: string
+  
+  // 调整原因（可选，用于节假日调整）
+  adjustmentReason?: string
 }
 
 // 课程冲突信息

@@ -1,120 +1,158 @@
-## timetables
+# Timetable Application
 
-timetable plugin, preview [demo1](http://preview.binlive.cn/Timetables/index.html "demo1") 、[demo2](http://preview.binlive.cn/Timetables/example.html "demo1")
+A timetable application developed based on Vue 3 and Cordova, supporting course management, schedule planning, and reminder settings. It can run on both web browsers and mobile devices.
 
-![Timetables1](https://github.com/Hzy0913/hanlibrary/blob/master/Timetables1.png "Timetables1")![Timetables](https://github.com/Hzy0913/hanlibrary/blob/master/Timetables.png "Timetables")
+## Features
 
+- 📅 **Course Management** - Add, edit, and delete course information
+- 📝 **Schedule Planning** - Manage personal schedules and activities
+- ⚙️ **Personalized Settings** - Theme switching, semester settings, display options, etc.
+- 🔔 **Notification Reminders** - Advance reminder function for courses and schedules
+- 📱 **Responsive Design** - Adapt to different screen sizes
+- 🌙 **Dark Mode** - Eye protection mode support
 
-## Install
+## Technology Stack
+
+- **Frontend Framework**: Vue 3
+- **State Management**: Pinia
+- **Routing**: Vue Router
+- **Build Tool**: Vite
+- **Packaging Tool**: Cordova
+- **Development Language**: TypeScript
+
+## Project Structure
 
 ```
-npm install timetables
-```
-#### Download Source Files
-- [Download min file](https://github.com/Hzy0913/Timetable/blob/master/exampel/Timetables.min.js "Download min file")
-
-## Usage
-```js
-import Timetables from 'timetables';
-
-let timetable;
-
-var timetableList = [
-  ['English','English','Physics','Science','English','Maths','Physics','Science','Science','Maths','Physics','Science'],
-  ['Maths','English','Science','Science','English','English','English','Science','Maths','English','English','History'],
-  ['English','Maths','Physics','Science','English','Maths','Physics','Science','English','Maths','Physics','Science'],
-  ['Maths','English','Science','Science','English','English','English','Physics','Maths','English','English','History'],
-  ['English','Maths','Physics','Science','English','Maths','Physics','Science','English','Maths','Physics','Science'],
-];
-
-// You can create a timetable instance with options to set configuration.
-timetable = new Timetables({
-  el: '#coursesTable',
-  timetables: timetableList,
-  week: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-  timetableType: [
-    ['Morning', 4],
-    ['Afternoon', 4],
-    ['Night', 4]
-  ],
-});
-```
-## options & methods
-
-| Option or Method	  |  Type  | Description   |
-| ------------ | ------------ | ------------ |
-| el  | String(required)   | The container dom element id ('#id')  |
-| timetables  | Array(required)   | The content of timetable (two-dimensional array)  |
-| week  | Array(required)   | Head week of timetable (two-dimensional array)  |
-| timetableType  | Array(required)   | The left side classification of timetable (two-dimensional array)   |
-| highlightWeek  | Number  | Set head week highligh, pass in the index of this day, it's will be generate a className(you can custom style)  |
-| styles  | Object   | The grid's style of timetable, more description see below   |
-| merge  | Boolean   | Merge the same content that are approaching on the same day(default is true)  |
-| gridOnClick  | Function   |  Cell click trigger event, method parameters can get the information of the this cell  |
-| setOption  | Function   | The instance method, use the new options reset and render timetable, options same as above (no have `el` option) |
-
-#### Use example
-```javascript
-var timetables = [
-  ['College English(Ⅳ)@10203', 'College English(Ⅳ)@10203', '', '', '', '', 'Physical@14208', 'Physical@14208', '', '', '', 'Elective course'],
-  ['', '', 'Operating System@11302', 'Operating System@11302', 'Computer Principle @16204', 'Computer Principle @16204', '', '', '', '', '', ''],
-  ['College Sports(Ⅳ)', 'College Sports(Ⅳ)', 'Algorithm(Ⅳ)@15208', 'Algorithm(Ⅳ)@15208', '', '', 'Operating System', 'Operating System', '', '', '', ''],
-  ['', '', '', '', 'Art lessons@11301', 'Art lessons@11301', '', '', '', 'College Sports', 'College Sports', ''],
-  ['', '', 'Data Structure and Algorithms', 'Data Structure and Algorithms', '', '', '', '', 'Computer Principle', 'Computer Principle', '', ''],
-];
-var timetableType = [
-  [{index: '1',name: '8:30'}, 1],
-  [{index: '2',name: '9:30'}, 1],
-  [{index: '3',name: '10:30'}, 1],
-  [{index: '4',name: '11:30'}, 1],
-  [{index: '5',name: '12:30'}, 1],
-  [{index: '6',name: '14:30'}, 1],
-  [{index: '7',name: '15:30'}, 1],
-  [{index: '8',name: '16:30'}, 1],
-  [{index: '9',name: '17:30'}, 1],
-  [{index: '10',name: '18:30'}, 1],
-  [{index: '11',name: '19:30'}, 1],
-  [{index: '12',name: '20:30'}, 1]
-];
-var week =  ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-var highlightWeek = new Date().getDay();
-var styles = {
-    Gheight: 50,
-    leftHandWidth: 50,
-    palette: ['#ff6633', '#eeeeee']
-};
-
-// Instantiate(init timetable)
-var timetable = new Timetables({
-    el: '#coursesTable',
-    timetables: timetables,
-    week: week,
-    timetableType: timetableType,
-    highlightWeek: highlightWeek,
-    gridOnClick: function (e) {
-      alert('name:' + e.name + ' week:' + e.week + ' index:' + e.index + 'length: ' + e.length)
-      console.log(e)
-    },
-    styles: styles
-});
-
-//reset options
-function onChange() {
-  timetable.setOption({
-    timetables: courseListOther,
-    week: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Saturday'],
-    styles:{
-      palette: ['#dedcda', '#ff4081']
-    },
-    timetableType:courseType,
-    gridOnClick: function (e) {
-      console.log(e)
-    }})
-};
+src/
+├── components/        # Components
+│   ├── CourseDialog.vue      # Course add/edit dialog
+│   ├── ScheduleDialog.vue    # Schedule add/edit dialog
+│   └── TimetableView.vue     # Timetable view component
+├── core/              # Core functions
+├── router/            # Routing configuration
+├── stores/            # State management
+│   ├── courses.ts     # Course data
+│   ├── schedules.ts   # Schedule data
+│   └── settings.ts    # Application settings
+├── types/             # Type definitions
+├── utils/             # Utility functions
+│   └── cordovaLoader.js      # Cordova environment loader
+├── views/             # Page views
+│   ├── HomeView.vue       # Home page/Timetable
+│   ├── ScheduleView.vue   # Schedule page
+│   └── SettingsView.vue   # Settings page
+├── App.vue            # Main component
+├── main.ts            # Application entry
+└── style.css          # Global styles
 ```
 
- - `timetables` Set content of timetable, option is two-dimensional array type, the subitem of this array need to be the same as length of `timetableType` option. It's will be auto filling by empty string when length of subitem is not enough. In the subitem, the same and approached content will be merge(set **merge** option is `false`, merger will not take effect)
- - `timetableType` The option can categorize `timetables` contents, it's two-dimensional array type. <br/> The first item in the subitem of this array can be a `string` or `object`, if it's a object, each value all will be create Dom, and key of object will be ClassName of this Dom. <br/> The second item in the subitem is a number type, it's means length of this classification. The sum of all lengths should be equal to subitem length of `timetables` option
- - `week` The option is used to set table head column name
- - `highlightWeek` This option is number of index(start from 1). The index corresponds to `week` option contents, it will be add a `highlight-week` className of table head.
- - `styles` Set style of timetable: <br/> **Gheight** Set height of grid for timetable (number type, pixel unit)   <br/>  **leftHandWidth** Set width of left classification for timetable (number type, pixel unit) <br/>**palette** After merged the same course, cells will be set background color, and color from `palette`. There are 15 colors by default, you can also set custom color arrays(The custom colors will be merged with the default colors, and custom colors will be priority use). When set this is **false**, don't add background color for cell of timetable.
+## Installation and Development
+
+### Prerequisites
+
+- Node.js (recommended v16.0 or higher)
+- npm (recommended v7.0 or higher)
+- Cordova CLI (optional, for mobile application building)
+
+### Install Dependencies
+
+```bash
+npm install
+```
+
+### Development Mode
+
+```bash
+npm run dev
+```
+
+This command will start a local development server, usually running at http://localhost:5173/.
+
+### Build Web Application
+
+```bash
+npm run build
+```
+
+The built files will be output to the `dist` directory.
+
+### Cordova Related Commands
+
+Add platforms:
+
+```bash
+npm run cordova:add-android  # Add Android platform
+npm run cordova:add-ios      # Add iOS platform
+```
+
+Build and run on device:
+
+```bash
+npm run cordova:run-android  # Build and run on Android device
+npm run cordova:run-ios      # Build and run on iOS device
+```
+
+## 🔧 Development Guide
+
+### Core Module Development
+Core modules are located in the `src/core/` directory. This code is shared across platforms, so ensure you follow these principles:
+- Do not rely on any platform-specific APIs
+- Use TypeScript to ensure type safety
+- Implement business logic and data processing functions
+
+### Component Development
+- Components are located in the `src/components/` directory
+- Ensure components are reusable and independent
+- Follow Vue 3's Composition API style
+
+### View Development
+- Page views are located in the `src/views/` directory
+- Implement the main pages and layouts of the application
+- Use Vue Router for page navigation
+
+## 📝 User Guide
+
+### Add Semester
+1. Click the "Add Semester" button on the semester page
+2. Fill in semester name, start date, total weeks, etc.
+3. Click "Save" to complete the addition
+4. You can set a semester as the current semester
+
+### Add Course
+1. Click the "Add Course" button on the course page
+2. Fill in course name, teacher, location, time, etc.
+3. Select course color and week settings
+4. Click "Save" to complete the addition
+
+### View Timetable
+1. You can view the current semester's course schedule on the timetable page
+2. Use the "Previous Week" and "Next Week" buttons to switch weeks
+3. Click "Show Calendar" to select a date through the calendar
+
+### Add Schedule
+1. Click the "Add Schedule" button on the schedule page
+2. Fill in schedule title, description, time, etc.
+3. Set whether it's a full-day schedule and reminder
+4. Click "Save" to complete the addition
+
+### Data Import and Export
+1. You can find the "Data Management" option on the settings page
+2. Click "Export Data" to export all data as a JSON file
+3. Click "Import Data" to restore data from a JSON file
+
+## 🤝 Contribution
+
+Contributions are welcome! Please follow these steps:
+1. Fork the project repository
+2. Create a new branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add some feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Submit a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License
+
+## 📧 Contact Us
+
+If you have any questions or suggestions, please contact: trae.ai@example.com

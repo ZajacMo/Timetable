@@ -1,7 +1,7 @@
 
 # 课程表应用
 
-一款基于Vue3和Cordova开发的课程表应用，支持课程管理、日程安排和设置提醒等功能，可在网页和移动设备上运行。
+一款基于Vue 3和Cordova开发的课程表应用，支持课程管理、日程安排和设置提醒等功能，可在网页和移动设备上运行。
 
 ## 功能特性
 
@@ -36,6 +36,8 @@ src/
 │   ├── schedules.ts   # 日程数据
 │   └── settings.ts    # 应用设置
 ├── types/             # 类型定义
+├── utils/             # 工具函数
+│   └── cordovaLoader.js      # Cordova环境加载器
 ├── views/             # 页面视图
 │   ├── HomeView.vue       # 首页/课程表
 │   ├── ScheduleView.vue   # 日程页面
@@ -99,17 +101,15 @@ npm run cordova:run-ios      # 构建并运行到iOS设备
 - 使用TypeScript确保类型安全
 - 实现业务逻辑和数据处理功能
 
-### 桌面端开发
-Electron相关代码位于`src/electron/`目录：
-- `main.js`：处理窗口创建、菜单配置等主进程逻辑
-- `renderer.js`：处理UI渲染和用户交互
-- `preload.js`：在主进程和渲染进程之间提供安全通信
+### 组件开发
+- 组件位于`src/components/`目录
+- 确保组件的可复用性和独立性
+- 遵循Vue 3的组合式API风格
 
-### 移动端开发
-React Native相关代码位于`src/react-native/`目录：
-- `App.js`：应用入口组件
-- `Navigation.js`：配置应用导航
-- `screens/`：包含所有页面组件
+### 视图开发
+- 页面视图位于`src/views/`目录
+- 实现应用的主要页面和布局
+- 使用Vue Router进行页面导航
 
 ## 📝 使用说明
 
